@@ -31,7 +31,7 @@ jobs:
           from urllib.error import HTTPError, URLError
 
           uid = os.environ.get("ENKA_UID", "").strip()
-          if not re.fullmatch(r"\\d{9,10}", uid):
+          if not re.fullmatch(r"\d{9,10}", uid):
               print("Missing or invalid ENKA_UID. Add it once under Settings > Secrets and variables > Actions > Repository secrets.")
               sys.exit(1)
 
@@ -71,7 +71,7 @@ jobs:
               except (ValueError, OSError):
                   pass
 
-          path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\\n", encoding="utf-8")
+          path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
           print(f"Updated Showcase snapshot for {uid}: {len(showcase)} agents.")
           PY
 
