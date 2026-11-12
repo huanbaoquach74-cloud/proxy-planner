@@ -165,7 +165,7 @@ async function fetchEnka(uid){
 }
 async function syncEnka(){
  const uid=enkaUidInput.value.trim();
- if(!/^\\d{9,10}$/.test(uid)){enkaStatus.textContent="UID không hợp lệ. Hãy nhập UID ZZZ gồm 9–10 chữ số.";return;}
+ if(!/^\d{9,10}$/.test(uid)){enkaStatus.textContent="UID không hợp lệ. Hãy nhập UID ZZZ gồm 9–10 chữ số.";return;}
  switchProfile(uid);
  enkaStatus.textContent="Đang tải Showcase cho UID "+uid+"…";
  const button=document.getElementById("enkaSync");button.disabled=true;
@@ -183,8 +183,10 @@ async function syncEnka(){
 document.getElementById("enkaSync").onclick=syncEnka;
 if(activeUid){
  const cached=showCachedEnka(activeUid);
- if(cached)enkaStatus.textContent="Đang hiển thị Showcase đã lưu cho UID "+activeUid+"; nhấn Đồng bộ để làm mới.";
+ if(cached)enkaStatus.textContent="Đang hiển thị Showcase đã lưu cho UID "+activeUid+"; đang kiểm tra cập nhật…";
+ setTimeout(syncEnka,500);
 }
+setInterval(()=>{if(activeUid)syncEnka();},30*60*1000);
 function save(){saveProfile()}
 function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(data).map(n=>`<button class="agent ${n===selected?"active":""}" data-agent="${n}"><span class="avatar">${n.slice(0,2).toUpperCase()}</span><span><b>${n}</b><small>${data[n].role}</small></span></button>`).join("");document.querySelectorAll("[data-agent]").forEach(b=>b.onclick=()=>{selected=b.dataset.agent;save();render()})}
 function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes"].forEach(k=>document.getElementById(k).value=a[k]||"");document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${t.text||t}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
