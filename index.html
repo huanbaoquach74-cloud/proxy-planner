@@ -57,16 +57,15 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
 </main>
 <script>
 const defaults={
- Grace:{role:"Electric Anomaly",atk:"",ap:"",am:"",notes:"",tasks:["Xác nhận W-Engine đang sở hữu","Chốt bộ 4 + bộ 2 theo đội hình sử dụng","Kiểm tra main stat Slot 4 / 5 / 6","Đánh giá substat từng Drive Disc","Farm slot yếu nhất trước","Nâng Core Skill và kỹ năng cần thiết","Test Shock trong đội hình thực tế"]},
- Phoenix:{role:"Fire Anomaly",atk:"2528",ap:"303",am:"255",notes:"Đang dùng trấn Phoenix.",tasks:["Giữ AM nền ở breakpoint đã xác minh","Kiểm tra bộ Freedom Blues + bộ 2","Tối ưu AP mà không làm ATK tụt mạnh","Đánh giá Slot 2 / 4 / 5 / 6","Nâng kỹ năng và Core Skill cần thiết","Test Sear trên cùng mục tiêu và điều kiện"]},
- Velina:{role:"Support / Anomaly",atk:"2671",ap:"383",am:"",notes:"Joyau Doré · Wuthering Salon + Swing Jazz.",tasks:["Kiểm tra W-Engine và bộ Drive Disc","Đánh giá Slot 4 AP","Đánh giá Slot 2 ATK","Giữ Slot 5 ATK% và Slot 6 ER nếu phù hợp","Cải thiện substat có giá trị","Kiểm tra kỹ năng và Core Skill","Test Windswept trong điều kiện cố định"]}
+ "Agent mới":{role:"Đồng bộ UID để tải Agent",atk:"",ap:"",am:"",notes:"",tasks:[]}
 };
 const PROFILE_KEY="proxyPlannerProfiles";
 let profiles=JSON.parse(localStorage.getItem(PROFILE_KEY)||"{}");
 let activeUid=localStorage.getItem("activeUid")||"";
 const legacyData=JSON.parse(localStorage.getItem("proxyPlanner")||"null");
 let data=profiles[activeUid]||legacyData||structuredClone(defaults);
-let selected=localStorage.getItem("selectedAgent")||"Grace";
+let selected=localStorage.getItem("selectedAgent")||Object.keys(data)[0]||"Agent mới";
+if(!data[selected])selected=Object.keys(data)[0]||"Agent mới";
 const enkaUidInput=document.getElementById("enkaUid");
 const enkaStatus=document.getElementById("enkaStatus");
 enkaUidInput.value=activeUid;
@@ -82,6 +81,27 @@ function getProfile(data){
  return sd.ProfileDetail||sd.profileDetail||data.ProfileDetail||{};
 }
 let gameData=null;
+function syncPlannerAgents(payload){
+ const list=getShowcase(payload);
+ if(!list.length)return;
+ const next={};
+ for(const agent of list){
+  const id=String(agent.Id??agent.id??agent.avatarId??"");
+  const meta=gameData?.agents?.[id]||{};
+  const name=meta.name||("Agent "+id);
+  const roleLabels={Anomaly:"Dị thường",Attack:"Tấn công",Stun:"Khống chế",Support:"Hỗ trợ",Defense:"Phòng thủ"};
+  const role=(roleLabels[meta.role]||meta.role||"Agent")+" · "+((meta.element||[]).join("/"));
+  next[name]=data[name]||{role,atk:"",ap:"",am:"",notes:"",tasks:["Kiểm tra W-Engine","Kiểm tra bộ 6 Drive Disc","Chốt main stat","Đánh giá substat","Xác định mục tiêu chỉ số"]};
+  next[name].role=role;
+ }
+ for(const [name,profile] of Object.entries(data)){
+  if(name!=="Agent mới"&&!next[name])next[name]=profile;
+ }
+ data=Object.keys(next).length?next:structuredClone(defaults);
+ if(!data[selected])selected=Object.keys(data)[0];
+ saveProfile();
+ render();
+}
 function renderEnka(payload){
  const list=getShowcase(payload);
  const profile=getProfile(payload);
@@ -129,7 +149,7 @@ function setEnkaLink(uid){return `https://enka.network/api/zzz/uid/${uid}/`;}
 function showCachedEnka(uid){
  const raw=localStorage.getItem("enkaCache:"+uid);
  if(!raw)return null;
- try{const cache=JSON.parse(raw);renderEnka(cache.data);return cache;}catch{return null}
+ try{const cache=JSON.parse(raw);syncPlannerAgents(cache.data);renderEnka(cache.data);return cache;}catch{return null}
 }
 function propertyLabel(id){
  const meta=gameData?.properties?.[String(id)];
@@ -211,6 +231,7 @@ async function syncEnka(){
   const payload=await fetchEnka(uid);
   const cache={uid,data:payload,time:Date.now(),nextAt:Date.now()+Math.max(60,Number(payload.ttl)||300)*1000};
   localStorage.setItem("enkaCache:"+uid,JSON.stringify(cache));
+  syncPlannerAgents(payload);
   renderEnka(payload);
   enkaStatus.textContent="Đồng bộ thành công · "+new Date(cache.time).toLocaleTimeString("vi-VN")+" · dữ liệu Showcase công khai.";
  }catch(error){
@@ -230,7 +251,7 @@ function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(
 function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes"].forEach(k=>document.getElementById(k).value=a[k]||"");document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${t.text||t}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
 ["atk","ap","am","notes"].forEach(k=>document.getElementById(k).addEventListener("input",e=>{data[selected][k]=e.target.value;save()}));
 document.getElementById("add").onclick=()=>{let v=document.getElementById("newtask").value.trim();if(v){data[selected].tasks.push({text:v,done:false});document.getElementById("newtask").value="";save();render()}};
-document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại toàn bộ dữ liệu về bản mẫu?")){data=structuredClone(defaults);selected="Grace";save();render()}};
+document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại dữ liệu của hồ sơ hiện tại?")){data=structuredClone(defaults);selected="Grace";save();render()}};
 loadGameData();
 render();
 </script>
