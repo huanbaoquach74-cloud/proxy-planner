@@ -61,7 +61,7 @@ const defaults={
 };
 const PROFILE_KEY="proxyPlannerProfiles";
 let profiles=JSON.parse(localStorage.getItem(PROFILE_KEY)||"{}");
-let activeUid=localStorage.getItem("activeUid")||"";
+let activeUid=localStorage.getItem("activeUid")||localStorage.getItem("enkaUid")||"";
 const legacyData=JSON.parse(localStorage.getItem("proxyPlanner")||"null");
 let data=profiles[activeUid]||legacyData||structuredClone(defaults);
 let selected=localStorage.getItem("selectedAgent")||Object.keys(data)[0]||"Agent mới";
@@ -178,6 +178,7 @@ function saveProfile(){
  localStorage.setItem("proxyPlanner",JSON.stringify(data));
  localStorage.setItem("selectedAgent",selected);
  localStorage.setItem("activeUid",activeUid);
+ localStorage.setItem("enkaUid",activeUid);
 }
 function switchProfile(uid){
  if(uid===activeUid)return;
