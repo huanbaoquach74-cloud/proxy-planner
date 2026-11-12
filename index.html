@@ -181,10 +181,12 @@ function saveProfile(){
 }
 function switchProfile(uid){
  if(uid===activeUid)return;
+ const previousUid=activeUid;
  saveProfile();
  activeUid=uid;
- data=profiles[uid]||structuredClone(defaults);
- selected=Object.keys(data).includes(selected)?selected:"Grace";
+ const firstUidMigration=!previousUid&&profiles.local;
+ data=profiles[uid]||(firstUidMigration?structuredClone(profiles.local):structuredClone(defaults));
+ selected=Object.keys(data).includes(selected)?selected:Object.keys(data)[0]||"Agent mới";
  saveProfile();
  render();
 }
