@@ -37,11 +37,11 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
 <section class="panel section">
  <div class="section-head"><h3>Kết nối tài khoản Enka</h3><span class="pill">ZZZ Showcase</span></div>
  <div class="hint" style="margin-bottom:10px">Nhập UID để đồng bộ Agent đang trưng bày, cấp độ, Mindscape, W-Engine và Drive Disc. Enka không đọc toàn bộ kho Agent.</div>
- <div class="addrow" style="margin-top:0"><input id="enkaUid" inputmode="numeric" placeholder="UID ZZZ" value="1318239031"><button id="enkaSync">Đồng bộ</button></div>
+ <div class="addrow" style="margin-top:0"><input id="enkaUid" inputmode="numeric" placeholder="UID ZZZ" value=""><button id="enkaSync">Đồng bộ</button></div>
  <div id="enkaStatus" class="hint" style="margin-top:9px" role="status">Chưa đồng bộ. Dữ liệu thủ công vẫn được giữ nguyên.</div>
  <div id="enkaProfile" style="margin-top:12px"></div>
  <div id="enkaAgents" style="display:grid;gap:9px;margin-top:10px"></div>
- <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Nếu trình duyệt chặn kết nối</summary><p class="hint">Một số môi trường có thể chặn yêu cầu trực tiếp do CORS. Khi đó mở API Enka ở tab riêng, tải JSON rồi gửi file vào đây để nhập ở phiên bản tiếp theo. Không cần mật khẩu HoYoverse hay cookie.</p><a id="enkaDirect" href="https://enka.network/api/uid/1318239031/" target="_blank" rel="noopener">Mở dữ liệu Enka trực tiếp</a></details>
+ <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Nếu trình duyệt chặn kết nối</summary><p class="hint">Nếu trình duyệt chặn kết nối Enka (CORS), mở dữ liệu Enka ở tab riêng, lưu JSON về máy rồi nhập file JSON tại đây. Không cần mật khẩu HoYoverse hay cookie.</p><div class="addrow"><a id="enkaDirect" href="https://enka.network/" target="_blank" rel="noopener">Mở dữ liệu Enka</a><label class="btn secondary" for="enkaJsonFile">Nhập JSON</label><input id="enkaJsonFile" type="file" accept=".json,application/json" style="display:none"></div></details>
 </section>
 <section class="panel">
 <div class="hero"><div><h2 id="name">Grace</h2><p id="role">Electric Anomaly</p></div><span class="pill" id="status">Đang xây dựng</span></div>
@@ -68,13 +68,109 @@ const enkaStatus=document.getElementById("enkaStatus");
 const enkaDirect=document.getElementById("enkaDirect");
 enkaUidInput.value=localStorage.getItem("enkaUid")||"1318239031";
 function esc(v){return String(v??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function getShowcase(data){const pi=data.PlayerInfo||data.playerInfo||{};const sd=pi.ShowcaseDetail||pi.showcaseDetail||{};return sd.AvatarList||sd.avatarList||data.avatarInfoList||[]}
-function getProfile(data){const pi=data.PlayerInfo||data.playerInfo||{};const sd=pi.SocialDetail||pi.socialDetail||{};return sd.ProfileDetail||sd.profileDetail||{}}
-function renderEnka(data){const list=getShowcase(data);const profile=getProfile(data);document.getElementById("enkaProfile").innerHTML=`<b>${esc(profile.Nickname||profile.nickname||"Tài khoản ZZZ")}</b> · Inter-Knot ${esc(profile.Level||profile.level||"?")} · UID ${esc(data.uid||profile.Uid||profile.uid||enkaUidInput.value)}`;
- if(!list.length){document.getElementById("enkaAgents").innerHTML='<div class="hint">Enka không trả về Agent Showcase. Có thể hồ sơ chưa công khai hoặc chưa trưng bày Agent.</div>';return}
- document.getElementById("enkaAgents").innerHTML=list.map((a,i)=>{const id=a.Id??a.id??a.avatarId??"?";const level=a.Level??a.level??"?";const mind=a.TalentLevel??a.talentLevel??"?";const w=a.Weapon||a.weapon||{};const discs=a.EquippedList||a.equippedList||[];return `<div class="stat"><b>Agent ID ${esc(id)}</b><div class="hint">Lv. ${esc(level)} · Mindscape ${esc(mind)} · W-Engine ID ${esc(w.Id??w.id??"—")} · ${discs.length} Drive Disc</div></div>`}).join("")}
-async function syncEnka(){const uid=enkaUidInput.value.trim();if(!/^\d{8,12}$/.test(uid)){enkaStatus.textContent="UID chưa đúng định dạng.";return}localStorage.setItem("enkaUid",uid);enkaDirect.href=`https://enka.network/api/uid/${uid}/`;enkaStatus.textContent="Đang lấy dữ liệu Showcase từ Enka…";document.getElementById("enkaSync").disabled=true;try{const r=await fetch(enkaDirect.href,{headers:{Accept:"application/json"}});if(!r.ok)throw new Error(r.status===429?"Enka đang giới hạn lượt truy cập (429). Hãy đợi TTL rồi thử lại.":`Enka trả mã lỗi ${r.status}.`);const j=await r.json();localStorage.setItem("enkaCache",JSON.stringify({time:Date.now(),data:j}));renderEnka(j);enkaStatus.textContent=`Đồng bộ thành công · dữ liệu lưu lúc ${new Date().toLocaleTimeString("vi-VN")}.`; }catch(e){enkaStatus.textContent=`Không kết nối trực tiếp được: ${e.message}. Nếu là lỗi CORS, dùng liên kết “Mở dữ liệu Enka trực tiếp”.`; }finally{document.getElementById("enkaSync").disabled=false}}
-document.getElementById("enkaSync").onclick=syncEnka;
+function getShowcase(data){
+ const pi=data.PlayerInfo||data.playerInfo||{};
+ const sd=pi.ShowcaseDetail||pi.showcaseDetail||{};
+ return sd.AvatarList||sd.avatarList||data.avatarInfoList||data.AvatarList||[];
+}
+function getProfile(data){
+ const pi=data.PlayerInfo||data.playerInfo||{};
+ const sd=pi.SocialDetail||pi.socialDetail||{};
+ return sd.ProfileDetail||sd.profileDetail||data.ProfileDetail||{};
+}
+function renderEnka(payload){
+ const list=getShowcase(payload);
+ const profile=getProfile(payload);
+ const uid=payload.uid||payload.UID||profile.Uid||profile.uid||enkaUidInput.value;
+ const nickname=profile.Nickname||profile.nickname||"Tài khoản ZZZ";
+ const level=profile.Level||profile.level||"?";
+ document.getElementById("enkaProfile").innerHTML=`<b>${esc(nickname)}</b> · Inter-Knot ${esc(level)} · UID ${esc(uid||"—")} · ${list.length} Agent showcase`;
+ if(!list.length){
+  document.getElementById("enkaAgents").innerHTML='<div class="hint">Không có Agent trong Showcase. Hãy bật hiển thị chi tiết nhân vật và thêm Agent vào Showcase trong game.</div>';
+  return;
+ }
+ document.getElementById("enkaAgents").innerHTML=list.map(a=>{
+  const id=a.Id??a.id??a.avatarId??"?";
+  const level=a.Level??a.level??"?";
+  const mind=a.TalentLevel??a.talentLevel??"?";
+  const w=a.Weapon||a.weapon||{};
+  const discs=a.EquippedList||a.equippedList||[];
+  const wText=w.Id||w.id ? `W-Engine ID ${esc(w.Id??w.id)} · Lv.${esc(w.Level??w.level??"?")}` : "Chưa có dữ liệu W-Engine";
+  const discText=discs.map(d=>{const e=d.Equipment||d.equipment||d;return `Slot ${esc(d.Slot??d.slot??"?")}: ID ${esc(e.Id??e.id??"?")} Lv.${esc(e.Level??e.level??"?")}`}).join(" · ");
+  return `<div class="stat"><b>Agent ID ${esc(id)}</b><div class="hint">Lv. ${esc(level)} · Mindscape ${esc(mind)}</div><div class="hint">${wText}</div><div class="hint">${discText||"Chưa có Drive Disc trong dữ liệu showcase"}</div></div>`;
+ }).join("");
+}
+function setEnkaLink(uid){
+ enkaDirect.href=/^\\d{8,12}$/.test(uid)?`https://enka.network/api/uid/${uid}/`:"https://enka.network/";
+}
+function showCachedEnka(){
+ const raw=localStorage.getItem("enkaCache");
+ if(!raw)return null;
+ try{
+  const cache=JSON.parse(raw);
+  renderEnka(cache.data);
+  return cache;
+ }catch{return null}
+}
+async function syncEnka(force=false){
+ const uid=enkaUidInput.value.trim();
+ if(!/^\\d{8,12}$/.test(uid)){enkaStatus.textContent="Nhập UID ZZZ (8–12 chữ số) để kết nối.";return}
+ localStorage.setItem("enkaUid",uid);setEnkaLink(uid);
+ const raw=localStorage.getItem("enkaCache");
+ if(raw){
+  try{
+   const cache=JSON.parse(raw);
+   if(cache.uid===uid && cache.nextAt>Date.now() && !force){
+    renderEnka(cache.data);
+    enkaStatus.textContent=`Đang dùng dữ liệu đã lưu. Enka cho phép làm mới sau ${new Date(cache.nextAt).toLocaleTimeString("vi-VN")}.`;
+    return;
+   }
+  }catch{}
+ }
+ enkaStatus.textContent="Đang lấy dữ liệu Showcase từ Enka…";
+ document.getElementById("enkaSync").disabled=true;
+ try{
+  const r=await fetch(enkaDirect.href,{headers:{Accept:"application/json"}});
+  if(!r.ok){
+   const messages={400:"UID sai định dạng.",404:"Không tìm thấy UID hoặc tài khoản chưa có dữ liệu công khai.",424:"Enka đang bảo trì hoặc dữ liệu game vừa cập nhật.",429:"Enka đang giới hạn lượt truy cập (429). Hãy chờ TTL rồi thử lại."};
+   throw new Error(messages[r.status]||`Enka trả mã lỗi ${r.status}.`);
+  }
+  const j=await r.json();
+  const ttl=Math.max(60,Number(j.ttl)||300);
+  const cache={uid,data:j,time:Date.now(),nextAt:Date.now()+ttl*1000};
+  localStorage.setItem("enkaCache",JSON.stringify(cache));
+  renderEnka(j);
+  enkaStatus.textContent=`Đồng bộ thành công · ${new Date(cache.time).toLocaleTimeString("vi-VN")} · tự kiểm tra lại sau khoảng ${Math.ceil(ttl/60)} phút.`;
+ }catch(e){
+  const cached=showCachedEnka();
+  enkaStatus.textContent=`Không tải trực tiếp được: ${e.message}. ${cached?"Đang giữ dữ liệu đồng bộ gần nhất. ":""}Nếu là CORS, dùng nút Nhập JSON bên dưới.`;
+ }finally{document.getElementById("enkaSync").disabled=false}
+}
+document.getElementById("enkaSync").onclick=()=>syncEnka(true);
+document.getElementById("enkaJsonFile").addEventListener("change",async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  const j=JSON.parse(await file.text());
+  if(!getShowcase(j).length && !getProfile(j).Uid && !getProfile(j).uid)throw new Error("File không giống dữ liệu Enka ZZZ.");
+  const uid=j.uid||j.UID||getProfile(j).Uid||getProfile(j).uid||enkaUidInput.value.trim();
+  if(uid){enkaUidInput.value=uid;localStorage.setItem("enkaUid",uid);setEnkaLink(uid)}
+  const ttl=Math.max(60,Number(j.ttl)||300);
+  localStorage.setItem("enkaCache",JSON.stringify({uid,data:j,time:Date.now(),nextAt:Date.now()+ttl*1000}));
+  renderEnka(j);enkaStatus.textContent="Đã nhập JSON Enka thành công. Dữ liệu được lưu trên thiết bị này.";
+ }catch(err){enkaStatus.textContent="Không nhập được file: "+err.message}
+ e.target.value="";
+});
+const cachedEnka=showCachedEnka();
+if(cachedEnka){
+ enkaUidInput.value=localStorage.getItem("enkaUid")||cachedEnka.uid||"";
+ setEnkaLink(enkaUidInput.value);
+ if(cachedEnka.nextAt>Date.now()) enkaStatus.textContent="Đang hiển thị dữ liệu Enka đã lưu; app sẽ tự đồng bộ lại khi hết thời gian chờ.";
+ else enkaStatus.textContent="Đang hiển thị dữ liệu Enka đã lưu; sẽ tự kiểm tra cập nhật.";
+}else{
+ enkaUidInput.value=localStorage.getItem("enkaUid")||"";
+ setEnkaLink(enkaUidInput.value);
+}
+if(enkaUidInput.value.trim()) syncEnka(false);
 const cachedEnka=localStorage.getItem("enkaCache");if(cachedEnka){try{const c=JSON.parse(cachedEnka);renderEnka(c.data);enkaStatus.textContent="Đang hiển thị bản đồng bộ đã lưu; bấm Đồng bộ để kiểm tra cập nhật."}catch{}}
 
 function save(){localStorage.setItem("proxyPlanner",JSON.stringify(data));localStorage.setItem("selectedAgent",selected)}
