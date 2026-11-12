@@ -81,6 +81,7 @@ function getProfile(data){
  const sd=pi.SocialDetail||pi.socialDetail||{};
  return sd.ProfileDetail||sd.profileDetail||data.ProfileDetail||{};
 }
+let gameData=null;
 function renderEnka(payload){
  const list=getShowcase(payload);
  const profile=getProfile(payload);
@@ -94,19 +95,23 @@ function renderEnka(payload){
  }
  document.getElementById("enkaAgents").innerHTML=list.map(a=>{
   const id=a.Id??a.id??a.avatarId??"?";
-  const agentNames={"1561":"Velina","1551":"Pyrois","1641":"Phoenix","1031":"Nicole","1181":"Grace","1101":"Koleda"};
-  const agentName=agentNames[String(id)]||("Agent "+id);
+  const agentMeta=gameData?.agents?.[String(id)]||{};
+  const agentName=agentMeta.name||("Agent "+id);
   const level=a.Level??a.level??"?";
   const mind=a.TalentLevel??a.talentLevel??"?";
   const w=a.Weapon||a.weapon||{};
   const discs=a.EquippedList||a.equippedList||[];
-  const wText=w.Id||w.id ? `W-Engine ID ${esc(w.Id??w.id)} · Lv.${esc(w.Level??w.level??"?")}` : "Chưa có dữ liệu W-Engine";
+  const weaponId=String(w.Id??w.id??"");
+  const weaponName=gameData?.weapons?.[weaponId]?.name;
+  const wText=weaponId ? `${esc(weaponName||("W-Engine "+weaponId))} · Lv.${esc(w.Level??w.level??"?")}` : "Chưa có dữ liệu W-Engine";
   const discText=discs.map(d=>{
    const e=d.Equipment||d.equipment||d;
    const mains=e.MainPropertyList||e.MainStatList||e.mainPropertyList||e.mainStatList||[];
    const subs=e.RandomPropertyList||e.randomPropertyList||[];
    const props=[...mains,...subs].map(p=>formatProperty(p)).join(" · ");
-   return `Slot ${esc(d.Slot??d.slot??"?")}: ID ${esc(e.Id??e.id??"?")} Lv.${esc(e.Level??e.level??"?")}${props?" — "+esc(props):""}`;
+   const discId=String(e.Id??e.id??"");
+   const discMeta=gameData?.discs?.[discId];
+   return `Slot ${esc(d.Slot??d.slot??"?")}: ${esc(discMeta?.suitName||("Drive Disc "+discId))} · Lv.${esc(e.Level??e.level??"?")}${props?" — "+esc(props):""}`;
   }).join("<br>");
   return `<div class="stat"><b>${esc(agentName)}</b><div class="hint">ID ${esc(id)} · Lv. ${esc(level)} · Mindscape ${esc(mind)}</div><div class="hint">${wText}</div><div class="hint">${discText||"Chưa có Drive Disc trong dữ liệu showcase"}</div></div>`;
  }).join("");
@@ -118,15 +123,25 @@ function showCachedEnka(uid){
  try{const cache=JSON.parse(raw);renderEnka(cache.data);return cache;}catch{return null}
 }
 function propertyLabel(id){
- const names={11102:"HP%",11103:"HP",12102:"ATK%",12103:"ATK",12202:"Impact%",13102:"DEF%",13103:"DEF",20101:"CRIT Rate",21101:"CRIT DMG",23101:"PEN Ratio",23201:"PEN",30502:"Energy Regen%",30503:"Energy Regen",31201:"Anomaly Proficiency",31203:"Anomaly Proficiency",31402:"Anomaly Mastery%",31403:"Anomaly Mastery",31501:"Physical DMG",31601:"Fire DMG",31701:"Ice DMG",31801:"Electric DMG",31901:"Ether DMG"};
- return names[id]||("Property "+id);
+ const meta=gameData?.properties?.[String(id)];
+ return meta?.name||("Property "+id);
 }
 function formatProperty(p){
  const id=Number(p.PropertyId??p.propertyId);
  const raw=Number(p.PropertyValue??p.propertyValue??0);
- const percent=[11102,12102,12202,13102,20101,21101,23101,30502,31402].includes(id);
- const value=percent?(raw/10000*100).toFixed(1)+"%":String(raw);
+ const format=gameData?.properties?.[String(id)]?.format||"";
+ const value=format.includes("%")?(raw/100).toFixed(1)+"%":String(raw);
  return propertyLabel(id)+" "+value;
+}
+async function loadGameData(){
+ try{
+  const response=await fetch("./game-data.json",{cache:"force-cache"});
+  if(!response.ok)throw new Error("Metadata HTTP "+response.status);
+  gameData=await response.json();
+  if(activeUid)showCachedEnka(activeUid);
+ }catch(error){
+  console.warn("Could not load localized game metadata:",error);
+ }
 }
 function saveProfile(){
  profiles[activeUid||"local"]=data;
@@ -204,6 +219,7 @@ function render(){renderAgents();let a=data[selected];document.getElementById("n
 ["atk","ap","am","notes"].forEach(k=>document.getElementById(k).addEventListener("input",e=>{data[selected][k]=e.target.value;save()}));
 document.getElementById("add").onclick=()=>{let v=document.getElementById("newtask").value.trim();if(v){data[selected].tasks.push({text:v,done:false});document.getElementById("newtask").value="";save();render()}};
 document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại toàn bộ dữ liệu về bản mẫu?")){data=structuredClone(defaults);selected="Grace";save();render()}};
+loadGameData();
 render();
 </script>
 </body></html>
