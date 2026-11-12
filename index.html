@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f7fb">
+<title>Proxy Planner — ZZZ</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#202638;--muted:#788197;--line:#e7eaf1;--accent:#6658e8;--soft:#efedff;--green:#159b75;--shadow:0 8px 28px #25304b0b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);padding:16px max(18px,calc((100% - 1050px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:5}
+.brand{font-weight:850;letter-spacing:-.5px;font-size:20px}.brand span{color:var(--accent)}.sub{color:var(--muted);font-size:12px}
+main{max-width:1050px;margin:24px auto;padding:0 16px 50px}.intro{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:20px}.intro h1{font-size:27px;margin:0 0 4px;letter-spacing:-.8px}.intro p{margin:0;color:var(--muted)}
+.layout{display:grid;grid-template-columns:270px 1fr;gap:18px}.panel,.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.sidebar{padding:14px;height:max-content}.side-title{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:1px;margin:4px 8px 10px}
+.agent{width:100%;border:0;background:transparent;text-align:left;padding:12px;border-radius:12px;display:flex;align-items:center;gap:11px;color:var(--ink);cursor:pointer;margin:3px 0}
+.agent.active{background:var(--soft);color:var(--accent)}.avatar{width:40px;height:40px;border-radius:12px;background:#f0f1f8;display:grid;place-items:center;font-weight:800;font-size:14px}
+.agent small{display:block;color:var(--muted);font-size:11px}.agent b{font-size:14px}
+.content{display:grid;gap:15px}.hero{padding:20px;display:flex;justify-content:space-between;align-items:center;gap:15px}.hero h2{margin:0;font-size:23px}.hero p{margin:4px 0 0;color:var(--muted)}.pill{background:#f0efff;color:var(--accent);border-radius:99px;padding:6px 10px;font-size:12px;font-weight:750}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 16px}.stat{background:#f8f9fc;border:1px solid var(--line);border-radius:13px;padding:12px}.stat label{display:block;color:var(--muted);font-size:11px}.stat input{width:100%;border:0;background:transparent;font-weight:800;font-size:19px;color:var(--ink);outline:none;padding:4px 0}
+.section{padding:18px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.section h3{margin:0;font-size:16px}.hint{color:var(--muted);font-size:12px}
+.progress{height:8px;background:#eff1f6;border-radius:20px;overflow:hidden;margin:10px 0 14px}.bar{height:100%;background:var(--green);width:0;transition:.2s}
+.task{display:flex;gap:11px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}.task input{accent-color:var(--green);width:18px;height:18px;margin-top:2px}.task.done span{text-decoration:line-through;color:#9aa2b3}.task span{flex:1}.tag{font-size:10px;background:#f1f3f8;color:#687188;border-radius:6px;padding:3px 6px;white-space:nowrap}
+button,.btn{border:0;border-radius:10px;padding:10px 13px;background:var(--accent);color:white;font-weight:700;cursor:pointer}.btn.secondary{background:#f0f1f7;color:#505970}.addrow{display:flex;gap:8px;margin-top:12px}.addrow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px}
+.note{width:100%;min-height:72px;border:1px solid var(--line);border-radius:11px;padding:11px;font:inherit;resize:vertical}
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
+@media(max-width:700px){header{padding:13px 16px}main{margin:18px auto}.intro{align-items:flex-start;flex-direction:column}.layout{grid-template-columns:1fr}.sidebar{display:flex;overflow:auto;gap:5px;padding:8px}.side-title{display:none}.agent{min-width:118px;flex-direction:column;align-items:flex-start;gap:5px;margin:0}.avatar{width:34px;height:34px}.hero{padding:16px}.stats{padding:0 12px 12px;gap:7px}.stat{padding:9px}.stat input{font-size:17px}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">PROXY <span>PLANNER</span></div><div class="sub">Zenless Zone Zero · Personal build & farm tracker</div></div><button class="btn secondary" id="reset">Đặt lại dữ liệu</button></header>
+<main>
+<div class="intro"><div><h1>Kế hoạch phát triển Agent</h1><p>Chọn nhân vật, cập nhật chỉ số và theo dõi thứ tự farm.</p></div><span class="pill">Lưu tự động trên thiết bị</span></div>
+<div class="layout">
+<aside class="panel sidebar"><div class="side-title">DANH SÁCH AGENT</div><div id="agents"></div></aside>
+<div class="content">
+<section class="panel section">
+ <div class="section-head"><h3>Kết nối tài khoản Enka</h3><span class="pill">ZZZ Showcase</span></div>
+ <div class="hint" style="margin-bottom:10px">Nhập UID để đồng bộ Agent đang trưng bày, cấp độ, Mindscape, W-Engine và Drive Disc. Enka không đọc toàn bộ kho Agent.</div>
+ <div class="addrow" style="margin-top:0"><input id="enkaUid" inputmode="numeric" placeholder="UID ZZZ" value="1318239031"><button id="enkaSync">Đồng bộ</button></div>
+ <div id="enkaStatus" class="hint" style="margin-top:9px" role="status">Chưa đồng bộ. Dữ liệu thủ công vẫn được giữ nguyên.</div>
+ <div id="enkaProfile" style="margin-top:12px"></div>
+ <div id="enkaAgents" style="display:grid;gap:9px;margin-top:10px"></div>
+ <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Nếu trình duyệt chặn kết nối</summary><p class="hint">Một số môi trường có thể chặn yêu cầu trực tiếp do CORS. Khi đó mở API Enka ở tab riêng, tải JSON rồi gửi file vào đây để nhập ở phiên bản tiếp theo. Không cần mật khẩu HoYoverse hay cookie.</p><a id="enkaDirect" href="https://enka.network/api/uid/1318239031/" target="_blank" rel="noopener">Mở dữ liệu Enka trực tiếp</a></details>
+</section>
+<section class="panel">
+<div class="hero"><div><h2 id="name">Grace</h2><p id="role">Electric Anomaly</p></div><span class="pill" id="status">Đang xây dựng</span></div>
+<div class="stats">
+<div class="stat"><label>ATK</label><input id="atk" inputmode="decimal" placeholder="Nhập ATK"></div>
+<div class="stat"><label>AP</label><input id="ap" inputmode="decimal" placeholder="Nhập AP"></div>
+<div class="stat"><label>AM</label><input id="am" inputmode="decimal" placeholder="Nhập AM"></div>
+</div></section>
+<section class="panel section"><div class="section-head"><h3>Thứ tự công việc</h3><b id="count">0/0</b></div><div class="hint">Tick khi hoàn thành. Tiến độ được lưu tự động.</div><div class="progress"><div class="bar" id="bar"></div></div><div id="tasks"></div><div class="addrow"><input id="newtask" placeholder="Thêm việc cần làm..."><button id="add">Thêm</button></div></section>
+<section class="panel section"><div class="section-head"><h3>Ghi chú build</h3><span class="hint">W-Engine · Drive Disc · mục tiêu</span></div><textarea class="note" id="notes" placeholder="Ví dụ: W-Engine đang dùng, bộ đĩa, món cần farm..."></textarea></section>
+</div></div>
+<footer>Dữ liệu lưu trong trình duyệt trên thiết bị này. Guide và chỉ số mục tiêu cần được kiểm chứng/cập nhật riêng.</footer>
+</main>
+<script>
+const defaults={
+ Grace:{role:"Electric Anomaly",atk:"",ap:"",am:"",notes:"",tasks:["Xác nhận W-Engine đang sở hữu","Chốt bộ 4 + bộ 2 theo đội hình sử dụng","Kiểm tra main stat Slot 4 / 5 / 6","Đánh giá substat từng Drive Disc","Farm slot yếu nhất trước","Nâng Core Skill và kỹ năng cần thiết","Test Shock trong đội hình thực tế"]},
+ Phoenix:{role:"Fire Anomaly",atk:"2528",ap:"303",am:"255",notes:"Đang dùng trấn Phoenix.",tasks:["Giữ AM nền ở breakpoint đã xác minh","Kiểm tra bộ Freedom Blues + bộ 2","Tối ưu AP mà không làm ATK tụt mạnh","Đánh giá Slot 2 / 4 / 5 / 6","Nâng kỹ năng và Core Skill cần thiết","Test Sear trên cùng mục tiêu và điều kiện"]},
+ Velina:{role:"Support / Anomaly",atk:"2671",ap:"383",am:"",notes:"Joyau Doré · Wuthering Salon + Swing Jazz.",tasks:["Kiểm tra W-Engine và bộ Drive Disc","Đánh giá Slot 4 AP","Đánh giá Slot 2 ATK","Giữ Slot 5 ATK% và Slot 6 ER nếu phù hợp","Cải thiện substat có giá trị","Kiểm tra kỹ năng và Core Skill","Test Windswept trong điều kiện cố định"]}
+};
+let data=JSON.parse(localStorage.getItem("proxyPlanner")||"null")||structuredClone(defaults);
+let selected=localStorage.getItem("selectedAgent")||"Grace";
+const enkaUidInput=document.getElementById("enkaUid");
+const enkaStatus=document.getElementById("enkaStatus");
+const enkaDirect=document.getElementById("enkaDirect");
+enkaUidInput.value=localStorage.getItem("enkaUid")||"1318239031";
+function esc(v){return String(v??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function getShowcase(data){const pi=data.PlayerInfo||data.playerInfo||{};const sd=pi.ShowcaseDetail||pi.showcaseDetail||{};return sd.AvatarList||sd.avatarList||data.avatarInfoList||[]}
+function getProfile(data){const pi=data.PlayerInfo||data.playerInfo||{};const sd=pi.SocialDetail||pi.socialDetail||{};return sd.ProfileDetail||sd.profileDetail||{}}
+function renderEnka(data){const list=getShowcase(data);const profile=getProfile(data);document.getElementById("enkaProfile").innerHTML=`<b>${esc(profile.Nickname||profile.nickname||"Tài khoản ZZZ")}</b> · Inter-Knot ${esc(profile.Level||profile.level||"?")} · UID ${esc(data.uid||profile.Uid||profile.uid||enkaUidInput.value)}`;
+ if(!list.length){document.getElementById("enkaAgents").innerHTML='<div class="hint">Enka không trả về Agent Showcase. Có thể hồ sơ chưa công khai hoặc chưa trưng bày Agent.</div>';return}
+ document.getElementById("enkaAgents").innerHTML=list.map((a,i)=>{const id=a.Id??a.id??a.avatarId??"?";const level=a.Level??a.level??"?";const mind=a.TalentLevel??a.talentLevel??"?";const w=a.Weapon||a.weapon||{};const discs=a.EquippedList||a.equippedList||[];return `<div class="stat"><b>Agent ID ${esc(id)}</b><div class="hint">Lv. ${esc(level)} · Mindscape ${esc(mind)} · W-Engine ID ${esc(w.Id??w.id??"—")} · ${discs.length} Drive Disc</div></div>`}).join("")}
+async function syncEnka(){const uid=enkaUidInput.value.trim();if(!/^\d{8,12}$/.test(uid)){enkaStatus.textContent="UID chưa đúng định dạng.";return}localStorage.setItem("enkaUid",uid);enkaDirect.href=`https://enka.network/api/uid/${uid}/`;enkaStatus.textContent="Đang lấy dữ liệu Showcase từ Enka…";document.getElementById("enkaSync").disabled=true;try{const r=await fetch(enkaDirect.href,{headers:{Accept:"application/json"}});if(!r.ok)throw new Error(r.status===429?"Enka đang giới hạn lượt truy cập (429). Hãy đợi TTL rồi thử lại.":`Enka trả mã lỗi ${r.status}.`);const j=await r.json();localStorage.setItem("enkaCache",JSON.stringify({time:Date.now(),data:j}));renderEnka(j);enkaStatus.textContent=`Đồng bộ thành công · dữ liệu lưu lúc ${new Date().toLocaleTimeString("vi-VN")}.`; }catch(e){enkaStatus.textContent=`Không kết nối trực tiếp được: ${e.message}. Nếu là lỗi CORS, dùng liên kết “Mở dữ liệu Enka trực tiếp”.`; }finally{document.getElementById("enkaSync").disabled=false}}
+document.getElementById("enkaSync").onclick=syncEnka;
+const cachedEnka=localStorage.getItem("enkaCache");if(cachedEnka){try{const c=JSON.parse(cachedEnka);renderEnka(c.data);enkaStatus.textContent="Đang hiển thị bản đồng bộ đã lưu; bấm Đồng bộ để kiểm tra cập nhật."}catch{}}
+
+function save(){localStorage.setItem("proxyPlanner",JSON.stringify(data));localStorage.setItem("selectedAgent",selected)}
+function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(data).map(n=>`<button class="agent ${n===selected?"active":""}" data-agent="${n}"><span class="avatar">${n.slice(0,2).toUpperCase()}</span><span><b>${n}</b><small>${data[n].role}</small></span></button>`).join("");document.querySelectorAll("[data-agent]").forEach(b=>b.onclick=()=>{selected=b.dataset.agent;save();render()})}
+function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes"].forEach(k=>document.getElementById(k).value=a[k]||"");document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${t.text||t}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
+["atk","ap","am","notes"].forEach(k=>document.getElementById(k).addEventListener("input",e=>{data[selected][k]=e.target.value;save()}));
+document.getElementById("add").onclick=()=>{let v=document.getElementById("newtask").value.trim();if(v){data[selected].tasks.push({text:v,done:false});document.getElementById("newtask").value="";save();render()}};
+document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại toàn bộ dữ liệu về bản mẫu?")){data=structuredClone(defaults);selected="Grace";save();render()}};
+render();
+</script>
+</body></html>
