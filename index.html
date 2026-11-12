@@ -66,7 +66,9 @@ let selected=localStorage.getItem("selectedAgent")||"Grace";
 const enkaUidInput=document.getElementById("enkaUid");
 const enkaStatus=document.getElementById("enkaStatus");
 const enkaDirect=document.getElementById("enkaDirect");
-enkaUidInput.value=localStorage.getItem("enkaUid")||"1318239031";
+const savedEnkaUid=localStorage.getItem("enkaUid");
+ if(savedEnkaUid==="1318239031") localStorage.removeItem("enkaUid");
+ enkaUidInput.value=savedEnkaUid && savedEnkaUid!=="1318239031" ? savedEnkaUid : "";
 function esc(v){return String(v??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function getShowcase(data){
  const pi=data.PlayerInfo||data.playerInfo||{};
@@ -101,7 +103,7 @@ function renderEnka(payload){
  }).join("");
 }
 function setEnkaLink(uid){
- enkaDirect.href=/^\d{8,12}$/.test(uid)?`https://enka.network/api/uid/${uid}/`:"https://enka.network/";
+ enkaDirect.href=/^\d{9,10}$/.test(uid)?`https://enka.network/api/uid/${uid}/`:"https://enka.network/";
 }
 function showCachedEnka(){
  const raw=localStorage.getItem("enkaCache");
@@ -114,7 +116,7 @@ function showCachedEnka(){
 }
 async function syncEnka(){
  const uid=enkaUidInput.value.trim();
- if(!/^\d{8,12}$/.test(uid)){enkaStatus.textContent="Nhập UID ZZZ (8–12 chữ số) để kết nối.";return}
+ if(!/^\d{9,10}$/.test(uid)){enkaStatus.textContent="Nhập UID ZZZ (8–12 chữ số) để kết nối.";return}
  localStorage.setItem("enkaUid",uid);setEnkaLink(uid);
  const raw=localStorage.getItem("enkaCache");
  if(raw){
@@ -171,7 +173,7 @@ if(cachedEnka){
  setEnkaLink(enkaUidInput.value);
 }
 if(enkaUidInput.value.trim()) syncEnka(false);
-const cachedEnka=localStorage.getItem("enkaCache");if(cachedEnka){try{const c=JSON.parse(cachedEnka);renderEnka(c.data);enkaStatus.textContent="Đang hiển thị bản đồng bộ đã lưu; bấm Đồng bộ để kiểm tra cập nhật."}catch{}}
+
 
 function save(){localStorage.setItem("proxyPlanner",JSON.stringify(data));localStorage.setItem("selectedAgent",selected)}
 function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(data).map(n=>`<button class="agent ${n===selected?"active":""}" data-agent="${n}"><span class="avatar">${n.slice(0,2).toUpperCase()}</span><span><b>${n}</b><small>${data[n].role}</small></span></button>`).join("");document.querySelectorAll("[data-agent]").forEach(b=>b.onclick=()=>{selected=b.dataset.agent;save();render()})}
