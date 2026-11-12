@@ -1,0 +1,88 @@
+name: Enka background sync
+
+on:
+  schedule:
+    - cron: "13 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: enka-background-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Fetch public ZZZ Showcase from Enka
+        env:
+          ENKA_UID: ${{ secrets.ENKA_UID }}
+        run: |
+          python - <<'PY'
+          import json, os, re, sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError, URLError
+
+          uid = os.environ.get("ENKA_UID", "").strip()
+          if not re.fullmatch(r"\\d{9,10}", uid):
+              print("Missing or invalid ENKA_UID. Add it once under Settings > Secrets and variables > Actions > Repository secrets.")
+              sys.exit(1)
+
+          url = f"https://enka.network/api/zzz/uid/{uid}/"
+          request = Request(url, headers={
+              "Accept": "application/json",
+              "User-Agent": "ProxyPlanner/1.0 (personal ZZZ build tracker)"
+          })
+          try:
+              with urlopen(request, timeout=30) as response:
+                  payload = json.loads(response.read().decode("utf-8"))
+          except HTTPError as error:
+              print(f"Enka returned HTTP {error.code}; no snapshot was changed.")
+              raise
+          except (URLError, TimeoutError) as error:
+              print(f"Could not reach Enka: {error}")
+              raise
+
+          player = payload.get("PlayerInfo") or {}
+          showcase = (player.get("ShowcaseDetail") or {}).get("AvatarList") or []
+          if not showcase:
+              print("Enka response has no public Showcase agents. No snapshot was written.")
+              sys.exit(1)
+
+          payload["_plannerSyncedAt"] = datetime.now(timezone.utc).isoformat()
+          path = Path("enka-data.json")
+          if path.exists():
+              try:
+                  previous = json.loads(path.read_text(encoding="utf-8"))
+                  old_compare = dict(previous)
+                  new_compare = dict(payload)
+                  old_compare.pop("_plannerSyncedAt", None)
+                  new_compare.pop("_plannerSyncedAt", None)
+                  if old_compare == new_compare:
+                      print("Showcase has not changed; keeping the existing snapshot.")
+                      sys.exit(0)
+              except (ValueError, OSError):
+                  pass
+
+          path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\\n", encoding="utf-8")
+          print(f"Updated Showcase snapshot for {uid}: {len(showcase)} agents.")
+          PY
+
+      - name: Publish changed snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add enka-data.json
+          if git diff --cached --quiet; then
+            echo "No new snapshot to publish."
+            exit 0
+          fi
+          git commit -m "chore: refresh Enka Showcase snapshot"
+          git push
