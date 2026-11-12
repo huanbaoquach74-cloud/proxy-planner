@@ -91,11 +91,11 @@ function syncPlannerAgents(payload){
   const name=meta.name||("Agent "+id);
   const roleLabels={Anomaly:"Dị thường",Attack:"Tấn công",Stun:"Khống chế",Support:"Hỗ trợ",Defense:"Phòng thủ"};
   const role=(roleLabels[meta.role]||meta.role||"Agent")+" · "+((meta.element||[]).join("/"));
-  next[name]=data[name]||{role,atk:"",ap:"",am:"",notes:"",tasks:["Kiểm tra W-Engine","Kiểm tra bộ 6 Drive Disc","Chốt main stat","Đánh giá substat","Xác định mục tiêu chỉ số"]};
+  next[name]=data[name]||data["Agent "+id]||{role,atk:"",ap:"",am:"",notes:"",tasks:["Kiểm tra W-Engine","Kiểm tra bộ 6 Drive Disc","Chốt main stat","Đánh giá substat","Xác định mục tiêu chỉ số"]};
   next[name].role=role;
  }
  for(const [name,profile] of Object.entries(data)){
-  if(name!=="Agent mới"&&!next[name])next[name]=profile;
+  if(name!=="Agent mới"&&!/^Agent \d+$/.test(name)&&!next[name])next[name]=profile;
  }
  data=Object.keys(next).length?next:structuredClone(defaults);
  if(!data[selected])selected=Object.keys(data)[0];
