@@ -167,6 +167,17 @@ async function syncEnka(){
  const uid=enkaUidInput.value.trim();
  if(!/^\d{9,10}$/.test(uid)){enkaStatus.textContent="UID không hợp lệ. Hãy nhập UID ZZZ gồm 9–10 chữ số.";return;}
  switchProfile(uid);
+ const savedRaw=localStorage.getItem("enkaCache:"+uid);
+ if(savedRaw){
+  try{
+   const saved=JSON.parse(savedRaw);
+   if(saved.nextAt>Date.now()){
+    renderEnka(saved.data);
+    enkaStatus.textContent="Đang dùng dữ liệu đã lưu cho UID "+uid+"; Enka cho phép kiểm tra lại sau "+new Date(saved.nextAt).toLocaleTimeString("vi-VN")+".";
+    return;
+   }
+  }catch{}
+ }
  enkaStatus.textContent="Đang tải Showcase cho UID "+uid+"…";
  const button=document.getElementById("enkaSync");button.disabled=true;
  try{
