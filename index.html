@@ -41,7 +41,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
  <div id="enkaStatus" class="hint" style="margin-top:9px" role="status">Chưa đồng bộ. Dữ liệu thủ công vẫn được giữ nguyên.</div>
  <div id="enkaProfile" style="margin-top:12px"></div>
  <div id="enkaAgents" style="display:grid;gap:9px;margin-top:10px"></div>
- <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Nếu trình duyệt chặn kết nối</summary><p class="hint">Nếu trình duyệt chặn kết nối Enka (CORS), mở dữ liệu Enka ở tab riêng, lưu JSON về máy rồi nhập file JSON tại đây. Không cần mật khẩu HoYoverse hay cookie.</p><div class="addrow"><a id="enkaDirect" href="https://enka.network/" target="_blank" rel="noopener">Mở dữ liệu Enka</a><label class="btn secondary" for="enkaJsonFile">Nhập JSON</label><input id="enkaJsonFile" type="file" accept=".json,application/json" style="display:none"></div></details>
+ <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Nếu trình duyệt chặn kết nối</summary><p class="hint">Nếu trình duyệt chặn kết nối Enka (CORS), mở dữ liệu Enka ở tab riêng, lưu JSON về máy rồi nhập file JSON tại đây. Không cần mật khẩu HoYoverse hay cookie.</p><div class="addrow"><a id="enkaDirect" href="https://enka.network/" target="_blank" rel="noopener">Mở dữ liệu Enka</a><label class="btn secondary" for="enkaJsonFile">Nhập JSON</label><input id="enkaJsonFile" type="file" accept=".json,application/json" style="display:none"></div><div style="margin-top:10px"><textarea id="enkaJsonPaste" class="note" rows="5" placeholder="Dán toàn bộ JSON Enka vào đây..."></textarea><button id="enkaJsonPasteBtn" class="secondary" type="button" style="margin-top:8px">Đọc JSON đã dán</button></div></details>
 </section>
 <section class="panel">
 <div class="hero"><div><h2 id="name">Grace</h2><p id="role">Electric Anomaly</p></div><span class="pill" id="status">Đang xây dựng</span></div>
@@ -149,6 +149,17 @@ async function syncEnka(){
  }finally{document.getElementById("enkaSync").disabled=false}
 }
 document.getElementById("enkaSync").onclick=syncEnka;
+document.getElementById("enkaJsonPasteBtn").onclick=()=>{
+ try{
+  const j=JSON.parse(document.getElementById("enkaJsonPaste").value.trim());
+  if(!getShowcase(j).length && !getProfile(j).Uid && !getProfile(j).uid)throw new Error("JSON không có dữ liệu Enka ZZZ hợp lệ.");
+  const uid=j.uid||j.UID||getProfile(j).Uid||getProfile(j).uid||enkaUidInput.value.trim();
+  if(uid){enkaUidInput.value=uid;localStorage.setItem("enkaUid",uid);setEnkaLink(uid)}
+  const ttl=Math.max(60,Number(j.ttl)||300);
+  localStorage.setItem("enkaCache",JSON.stringify({uid,data:j,time:Date.now(),nextAt:Date.now()+ttl*1000}));
+  renderEnka(j);enkaStatus.textContent="Đã đọc JSON dán thành công. Dữ liệu được lưu trên thiết bị này.";
+ }catch(err){enkaStatus.textContent="Không đọc được JSON: "+err.message}
+};
 document.getElementById("enkaJsonFile").addEventListener("change",async e=>{
  const file=e.target.files?.[0];if(!file)return;
  try{
