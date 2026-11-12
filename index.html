@@ -253,7 +253,7 @@ function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(
 function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes"].forEach(k=>document.getElementById(k).value=a[k]||"");document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${t.text||t}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
 ["atk","ap","am","notes"].forEach(k=>document.getElementById(k).addEventListener("input",e=>{data[selected][k]=e.target.value;save()}));
 document.getElementById("add").onclick=()=>{let v=document.getElementById("newtask").value.trim();if(v){data[selected].tasks.push({text:v,done:false});document.getElementById("newtask").value="";save();render()}};
-document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại dữ liệu của hồ sơ hiện tại?")){data=structuredClone(defaults);selected="Grace";save();render()}};
+document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại dữ liệu của hồ sơ hiện tại?")){data=structuredClone(defaults);selected="Agent mới";save();render()}};
 loadGameData();
 render();
 </script>
