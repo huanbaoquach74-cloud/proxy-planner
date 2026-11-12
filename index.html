@@ -36,9 +36,9 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
 <div class="content">
 <section class="panel section">
  <div class="section-head"><h3>Kết nối tài khoản Enka</h3><span class="pill">ZZZ Showcase</span></div>
- <div class="hint" style="margin-bottom:10px">Nhập UID để đồng bộ Agent đang trưng bày, cấp độ, Mindscape, W-Engine và Drive Disc. Enka không đọc toàn bộ kho Agent.</div>
+ <div class="hint" style="margin-bottom:10px">Sau khi cài ENKA_UID trong GitHub Actions, hệ thống tự kiểm tra Showcase mỗi 6 giờ kể cả khi đóng app. Chỉ đọc Agent công khai trong Showcase, không đọc toàn bộ kho Agent.</div>
  <div class="addrow" style="margin-top:0"><input id="enkaUid" inputmode="numeric" placeholder="UID ZZZ" value=""><button id="enkaSync">Đồng bộ</button></div>
- <div id="enkaStatus" class="hint" style="margin-top:9px" role="status">Chưa đồng bộ. Dữ liệu thủ công vẫn được giữ nguyên.</div>
+ <div id="enkaStatus" class="hint" style="margin-top:9px" role="status">Đang chờ cấu hình đồng bộ nền lần đầu.</div>
  <div id="enkaProfile" style="margin-top:12px"></div>
  <div id="enkaAgents" style="display:grid;gap:9px;margin-top:10px"></div>
  <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Nếu trình duyệt chặn kết nối</summary><p class="hint">Nếu trình duyệt chặn kết nối Enka (CORS), mở dữ liệu Enka ở tab riêng, lưu JSON về máy rồi nhập file JSON tại đây. Không cần mật khẩu HoYoverse hay cookie.</p><div class="addrow"><a id="enkaDirect" href="https://enka.network/" target="_blank" rel="noopener">Mở dữ liệu Enka</a><label class="btn secondary" for="enkaJsonFile">Nhập JSON</label><input id="enkaJsonFile" type="file" accept=".json,application/json" style="display:none"></div><div style="margin-top:10px"><textarea id="enkaJsonPaste" class="note" rows="5" placeholder="Dán toàn bộ JSON Enka vào đây..."></textarea><button id="enkaJsonPasteBtn" class="secondary" type="button" style="margin-top:8px">Đọc JSON đã dán</button></div></details>
