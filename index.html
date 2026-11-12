@@ -101,7 +101,7 @@ function renderEnka(payload){
  }).join("");
 }
 function setEnkaLink(uid){
- enkaDirect.href=/^\\d{8,12}$/.test(uid)?`https://enka.network/api/uid/${uid}/`:"https://enka.network/";
+ enkaDirect.href=/^\d{8,12}$/.test(uid)?`https://enka.network/api/uid/${uid}/`:"https://enka.network/";
 }
 function showCachedEnka(){
  const raw=localStorage.getItem("enkaCache");
@@ -112,15 +112,15 @@ function showCachedEnka(){
   return cache;
  }catch{return null}
 }
-async function syncEnka(force=false){
+async function syncEnka(){
  const uid=enkaUidInput.value.trim();
- if(!/^\\d{8,12}$/.test(uid)){enkaStatus.textContent="Nhập UID ZZZ (8–12 chữ số) để kết nối.";return}
+ if(!/^\d{8,12}$/.test(uid)){enkaStatus.textContent="Nhập UID ZZZ (8–12 chữ số) để kết nối.";return}
  localStorage.setItem("enkaUid",uid);setEnkaLink(uid);
  const raw=localStorage.getItem("enkaCache");
  if(raw){
   try{
    const cache=JSON.parse(raw);
-   if(cache.uid===uid && cache.nextAt>Date.now() && !force){
+   if(cache.uid===uid && cache.nextAt>Date.now()){
     renderEnka(cache.data);
     enkaStatus.textContent=`Đang dùng dữ liệu đã lưu. Enka cho phép làm mới sau ${new Date(cache.nextAt).toLocaleTimeString("vi-VN")}.`;
     return;
@@ -146,7 +146,7 @@ async function syncEnka(force=false){
   enkaStatus.textContent=`Không tải trực tiếp được: ${e.message}. ${cached?"Đang giữ dữ liệu đồng bộ gần nhất. ":""}Nếu là CORS, dùng nút Nhập JSON bên dưới.`;
  }finally{document.getElementById("enkaSync").disabled=false}
 }
-document.getElementById("enkaSync").onclick=()=>syncEnka(true);
+document.getElementById("enkaSync").onclick=syncEnka;
 document.getElementById("enkaJsonFile").addEventListener("change",async e=>{
  const file=e.target.files?.[0];if(!file)return;
  try{
