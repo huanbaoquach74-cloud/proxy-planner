@@ -56,6 +56,9 @@ footer{color:#7f8e9a;letter-spacing:.7px;text-transform:uppercase;font-size:9px}
 \n/* Agent-scoped Enka dossier */\n.agent-meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 14px}.agent-meta{background:#111923;border:1px solid #465462;padding:10px;min-width:0}.agent-meta b{display:block;color:#f3f0df;font-size:12px;margin-top:5px;overflow-wrap:anywhere}.disc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.disc-card{background:#121a23;border:1px solid #465462;padding:10px;min-width:0}.disc-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;font-size:11px;color:#ffb477}.disc-level{white-space:nowrap;color:#b8f34a}.disc-props{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px;font-size:11px;overflow-wrap:anywhere}.disc-label{font-size:9px;letter-spacing:1px;color:#93a3b0;font-weight:800}.disc-props>div{line-height:1.65}\n@media(max-width:700px){.agent-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-meta:last-child{grid-column:1/-1}.disc-grid{grid-template-columns:1fr}.disc-props{grid-template-columns:1fr 1fr}}\n
 /* Build coach + resource planner */
 .coach-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}.coach-field{background:#111923;border:1px solid #465462;padding:10px;min-width:0}.coach-field label{display:block;color:#aab7c3;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}.coach-field input{width:100%;min-width:0;background:#0d151e;color:#b8f34a;border:1px solid #52616d;padding:9px;font:inherit}.coach-result{border:1px solid #52616d;background:#111923;padding:12px;margin-top:10px}.coach-line{display:grid;grid-template-columns:60px 1fr auto;gap:9px;align-items:center;padding:8px 0;border-bottom:1px dashed #394654;font-size:12px}.coach-line:last-child{border:0}.mini-track{height:7px;background:#293541}.mini-fill{height:100%;background:#b8f34a}.coach-priority{padding:10px 0;border-bottom:1px dashed #465462}.coach-priority:last-child{border:0}.coach-priority b{color:#ffb477}.coach-tag{font-size:10px;color:#b8f34a;letter-spacing:1px}@media(max-width:700px){.coach-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.coach-line{grid-template-columns:48px 1fr auto}}
+
+/* Automatic build coach */
+.buildcoach{margin-top:12px;border-top:1px solid #465462;padding-top:14px}.coach-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}.coach-chip{background:#111923;border:1px solid #465462;padding:9px;min-width:0}.coach-chip b{display:block;color:#b8f34a;font-size:13px;margin-top:4px}.coach-chip small{color:#93a3b0;font-size:9px;letter-spacing:1px}.coach-disc{display:grid;grid-template-columns:42px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px dashed #465462;font-size:11px}.coach-disc:last-child{border:0}.coach-status{font-size:9px;color:#b8f34a;letter-spacing:.5px;text-align:right}.coach-source{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.coach-source a{color:#ffb477;font-size:10px}.coach-targets{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}.coach-target{border:1px solid #465462;background:#111923;padding:6px 8px;font-size:10px}.coach-target b{color:#b8f34a}.coach-alert{border-left:3px solid #ff8b35;padding:8px 10px;background:#30251f;margin:9px 0;font-size:11px}.resource-plan{margin-top:10px;padding:12px;background:#111923;border:1px solid #465462}@media(max-width:700px){.coach-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.coach-disc{grid-template-columns:36px 1fr auto}}
 </style>
 </head>
 <body>
@@ -77,11 +80,7 @@ footer{color:#7f8e9a;letter-spacing:.7px;text-transform:uppercase;font-size:9px}
 <section class="panel">
 <div class="hero"><div><h2 id="name">Grace</h2><p id="role">Electric Anomaly</p></div><span class="pill" id="status">Đang xây dựng</span></div>
 <div class="section" id="agentEnkaDetail"><div class="hint">Đồng bộ UID để xem thông tin nhân vật, W-Engine và Drive Disc tại đây.</div></div>
-<div class="stats">
-<div class="stat"><label>ATK</label><input id="atk" inputmode="decimal" placeholder="Nhập ATK"></div>
-<div class="stat"><label>AP</label><input id="ap" inputmode="decimal" placeholder="Nhập AP"></div>
-<div class="stat"><label>AM</label><input id="am" inputmode="decimal" placeholder="Nhập AM"></div>
-</div></section>
+<div id="agentBuildCoach" class="section"><div class="hint">Đang chờ dữ liệu build và guide.</div></div></section>
 
 <section class="panel section"><div class="section-head"><h3>Resource Planner // Lịch farm</h3><span class="pill">Kế hoạch cá nhân</span></div><div class="hint">Enka không đọc được Battery Charge, kho vật liệu hoặc thời gian rảnh. Nhập các dữ liệu này để planner chia lịch thực tế hơn.</div><div class="coach-grid"><div class="coach-field"><label>Battery / ngày</label><input id="dailyBattery" type="number" min="0" max="240" placeholder="VD: 180"></div><div class="coach-field"><label>Phút rảnh / ngày</label><input id="dailyMinutes" type="number" min="0" max="1440" placeholder="VD: 45"></div><div class="coach-field"><label>Số ngày muốn lập</label><input id="planDays" type="number" min="1" max="14" placeholder="7"></div></div><div class="coach-field"><label>Vật liệu đang có / cần farm</label><textarea class="note" id="resourceNotes" placeholder="VD: 12 chip Dị thường, thiếu 8 chip cấp cao; dennies còn 300k..."></textarea></div><div id="resourcePlan" class="coach-result"><div class="hint">Nhập thời gian và Battery Charge để tạo lịch farm sơ bộ.</div></div></section>
 <section class="panel section"><div class="section-head"><h3>Thứ tự công việc</h3><b id="count">0/0</b></div><div class="hint">Tick khi hoàn thành. Tiến độ được lưu tự động.</div><div class="progress"><div class="bar" id="bar"></div></div><div id="tasks"></div><div class="addrow"><input id="newtask" placeholder="Thêm việc cần làm..."><button id="add">Thêm</button></div></section>
@@ -115,6 +114,7 @@ function getProfile(data){
  return sd.ProfileDetail||sd.profileDetail||data.ProfileDetail||{};
 }
 let gameData=null;
+let buildGuides=null;
 function syncPlannerAgents(payload){
  const list=getShowcase(payload);
  if(!list.length)return;
@@ -125,7 +125,7 @@ function syncPlannerAgents(payload){
   const name=meta.name||("Agent "+id);
   const roleLabels={Anomaly:"Dị thường",Attack:"Tấn công",Stun:"Khống chế",Support:"Hỗ trợ",Defense:"Phòng thủ"};
   const role=(roleLabels[meta.role]||meta.role||"Agent")+" · "+((meta.element||[]).join("/"));
-  next[name]=data[name]||data["Agent "+id]||{role,atk:"",ap:"",am:"",goalAtk:"",goalAp:"",goalAm:"",dailyBattery:"",dailyMinutes:"",planDays:"7",resourceNotes:"",notes:"",tasks:["Kiểm tra W-Engine","Kiểm tra bộ 6 Drive Disc","Chốt main stat","Đánh giá substat","Xác định mục tiêu chỉ số"]};
+  next[name]=data[name]||data["Agent "+id]||{role,atk:"",ap:"",am:"",dailyBattery:"",dailyMinutes:"",planDays:"7",resourceNotes:"",notes:"",tasks:["Kiểm tra W-Engine","Kiểm tra bộ 6 Drive Disc","Chốt main stat","Đánh giá substat","Xác định mục tiêu chỉ số"]};
   next[name].role=role;
  }
  data=Object.keys(next).length?next:structuredClone(defaults);
@@ -181,6 +181,7 @@ function renderAgentEnkaDetail(){
   return `<div class="disc-card"><div class="disc-top"><b>SLOT ${esc(slot)} · ${esc(meta.suitName||("Drive Disc "+discId))}</b><span class="disc-level">Lv.${esc(e.Level??e.level??"?")}</span></div><div class="disc-props"><div><span class="disc-label">MAIN STAT</span><br>${mainLines.length?mainLines.map(esc).join("<br>"):"—"}</div><div><span class="disc-label">SUBSTATS</span><br>${subLines.length?subLines.map(esc).join("<br>"):"—"}</div></div></div>`;
  }).join("");
  root.innerHTML=`<div class="section-head"><h3>HỒ SƠ ENKA // ${esc(selected)}</h3><span class="pill">Lv. ${esc(level)}</span></div><div class="agent-meta-grid"><div class="agent-meta"><span class="disc-label">MINDscape</span><b>${esc(mind)}</b></div><div class="agent-meta"><span class="disc-label">CORE SKILL</span><b>${esc(core)}</b></div><div class="agent-meta"><span class="disc-label">W-ENGINE</span><b>${weaponLine}</b></div></div>${skillText?`<div class="hint" style="margin:10px 0 14px">KỸ NĂNG · ${esc(skillText)}</div>`:""}<div class="section-head" style="margin-top:14px"><h3>DRIVE DISC // 6 SLOTS</h3><span class="hint">${discs.length}/6</span></div><div class="disc-grid">${discCards||'<div class="hint">Showcase chưa có Drive Disc.</div>'}</div>`;
+ renderBuildCoach(entry);
 }
 function setEnkaLink(uid){return `https://enka.network/api/zzz/uid/${uid}/`;}
 function showCachedEnka(uid){
@@ -204,6 +205,9 @@ async function loadGameData(){
   const response=await fetch("./game-data.json",{cache:"force-cache"});
   if(!response.ok)throw new Error("Metadata HTTP "+response.status);
   gameData=await response.json();
+  const guideResponse=await fetch("./build-guides.json",{cache:"no-store"});
+  if(!guideResponse.ok)throw new Error("Build guide HTTP "+guideResponse.status);
+  buildGuides=await guideResponse.json();
   if(activeUid)showCachedEnka(activeUid);
  }catch(error){
   console.warn("Could not load localized game metadata:",error);
@@ -301,40 +305,54 @@ if(activeUid){
 }
 setInterval(()=>{if(activeUid)syncEnka();},30*60*1000);
 
-function renderCoach(){
- const a=data[selected]||{};
- const metrics=[];
- const rows=metrics.map(([label,currentKey,goalKey])=>{
-  const cur=Number(a[currentKey]),goal=Number(a[goalKey]);
-  if(!a[currentKey]||!a[goalKey]||!Number.isFinite(cur)||!Number.isFinite(goal)||goal<=0)return null;
-  const pct=Math.max(0,Math.min(100,cur/goal*100));
-  return {label,cur,goal,pct,gap:goal-cur};
- }).filter(Boolean);
- const analysis=document.getElementById("coachAnalysis");
- if(!rows.length)analysis.innerHTML='<div class="hint">Mục tiêu build sẽ được hệ thống tự xác định từ Agent, bộ kỹ năng, W-Engine, Drive Disc và hướng dẫn build đã đối chiếu. Không cần nhập Goal thủ công.</div>';
- else{
-  const sorted=rows.slice().sort((x,y)=>(y.gap/y.goal)-(x.gap/x.goal));
-  analysis.innerHTML='<div class="coach-tag">BUILD GAP ANALYSIS · '+rows.length+' CHỈ SỐ</div>'+sorted.map(r=>'<div class="coach-line"><b>'+r.label+'</b><div><div class="mini-track"><div class="mini-fill" style="width:'+r.pct+'%"></div></div><div class="hint">'+r.cur.toLocaleString("vi-VN")+' / '+r.goal.toLocaleString("vi-VN")+'</div></div><b>'+(r.gap>0?'-'+r.gap.toLocaleString("vi-VN"):'ĐẠT')+'</b></div>').join('')+'<div class="hint" style="margin-top:9px">Ưu tiên theo tỷ lệ thiếu so với mục tiêu, không tự kết luận chỉ số nào quan trọng hơn về meta.</div>';
- }
- const battery=Math.max(0,Number(a.dailyBattery)||0),minutes=Math.max(0,Number(a.dailyMinutes)||0),days=Math.max(1,Math.min(14,Number(a.planDays)||7));
- const plan=document.getElementById("resourcePlan");
- if(!a.dailyBattery&&!a.dailyMinutes){plan.innerHTML='<div class="hint">Nhập Battery Charge/ngày và số phút rảnh/ngày để tạo lịch farm sơ bộ.</div>';return;}
- const priorities=rows.filter(r=>r.gap>0).sort((x,y)=>(y.gap/y.goal)-(x.gap/x.goal));
- const focus=priorities.length?priorities[0].label:"Build đã đạt các Goal đã nhập";
- const schedule=Array.from({length:days},(_,i)=>{
-  const target=priorities.length?priorities[i%priorities.length].label:"Kiểm tra build / farm vật liệu còn thiếu";
-  const time=minutes?minutes:0;
-  return '<div class="coach-priority"><span class="coach-tag">DAY '+(i+1)+'</span><br><b>'+target+'</b><div class="hint">'+(battery?battery+' Battery Charge dự kiến · ':'')+(minutes?time+' phút cho phiên farm':'Chưa nhập thời gian rảnh')+(a.resourceNotes?' · Đối chiếu kho vật liệu đã ghi':'')+'</div></div>';
- }).join('');
- plan.innerHTML='<div class="coach-tag">FARM PLAN · '+days+' NGÀY</div><div class="hint" style="margin:7px 0 10px">Ưu tiên build sẽ được lấy từ phân tích tự động khi bộ máy build coach hoàn tất. Đây hiện chỉ là khung lịch; chưa tính drop rate hay lượng vật liệu chính xác.</div>'+schedule+(a.resourceNotes?'<div class="hint" style="margin-top:10px"><b>GHI CHÚ TÀI NGUYÊN:</b> '+esc(a.resourceNotes)+'</div>':'');
+
+function statFamily(p){const id=Number(p?.PropertyId??p?.propertyId??0);return Math.floor(id/100);}
+function renderBuildCoach(entry){
+ const root=document.getElementById("agentBuildCoach");if(!root)return;
+ if(!entry){root.innerHTML="<div class='hint'>Đồng bộ Showcase để web tự phân tích build.</div>";return;}
+ const id=String(entry.Id??entry.id??entry.avatarId??""),guide=buildGuides?.agents?.[id];
+ if(!guide){root.innerHTML="<div class='buildcoach'><div class='section-head'><h3>BUILD COACH // "+esc(selected)+"</h3><span class='pill'>Chưa có guide</span></div><div class='hint'>Chưa có build guide đã xác minh trong thư viện. Web không tự đoán set hoặc ngưỡng chỉ số.</div></div>";return;}
+ const discs=(entry.EquippedList||entry.equippedList||[]).map(d=>({slot:Number(d.Slot??d.slot??0),e:d.Equipment||d.equipment||d}));
+ const counts={};discs.forEach(d=>{const m=gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{};const k=String(m.suitId||0);counts[k]=(counts[k]||0)+1;});
+ const best4=guide.best4||[],best2=guide.best2||[];
+ const set4=best4.slice().sort((a,b)=>(counts[b]||0)-(counts[a]||0))[0];
+ const remaining=discs.filter(d=>String((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId)!==String(set4));
+ const c2=id=>remaining.filter(d=>Number((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId)===Number(id)).length;
+ const set2=best2.slice().sort((a,b)=>c2(b)-c2(a))[0];
+ const name=id=>Object.values(gameData?.discs||{}).find(x=>Number(x.suitId)===Number(id))?.suitName||("Set "+id);
+ const main=discs.filter(d=>d.slot>=4&&d.slot<=6).map(d=>{const p=(d.e.MainPropertyList||d.e.MainStatList||[])[0];return {slot:d.slot,ok:!!p&&(guide.mainStats?.[String(d.slot)]||[]).includes(statFamily(p))};});
+ const lines=discs.map(d=>{
+  const e=d.e,m=gameData?.discs?.[String(e.Id??e.id??"")]||{};
+  const p=(e.MainPropertyList||e.MainStatList||[])[0],ok=d.slot<4||!!p&&(guide.mainStats?.[String(d.slot)]||[]).includes(statFamily(p));
+  const sub=e.RandomPropertyList||[];
+  const keys=sub.map(x=>{const n=Number(x.PropertyId);if(Math.floor(n/100)===312)return "AP";if(n===12102)return "ATK%";if(Math.floor(n/100)===231)return "PEN%";if(Math.floor(n/100)===201)return "CR";if(Math.floor(n/100)===211)return "CD";if(n===12103)return "ATK";return "";}).filter(x=>x&&guide.subPriority.includes(x));
+  const level=Number(e.Level||0),status=!ok?"MAIN SAI":level<15?"CẦN NÂNG":keys.length?"GIỮ":"XEM SUBSTAT";
+  const mainName=p?propertyLabel(p.PropertyId):"Main stat chưa rõ";
+  return "<div class='coach-disc'><b>S"+d.slot+"</b><div><b>"+esc(m.suitName||"Drive Disc")+"</b><div class='hint'>"+esc(mainName)+" · "+keys.length+" dòng substat ưu tiên · Lv."+level+"</div></div><span class='coach-status'>"+status+"</span></div>";
+ }).join("");
+ const targets=(guide.targets||[]).map(t=>"<span class='coach-target'>"+esc(t[0])+": <b>"+esc(t[1])+"</b></span>").join("");
+ const weapon=entry.Weapon||{},wid=Number(weapon.Id||0),sig=Number(guide.signatureWeaponId||0),wm=gameData?.weapons?.[String(wid)]||{},sm=gameData?.weapons?.[String(sig)]||{};
+ const warnings=[];if(Number(counts[String(set4)]||0)<4)warnings.push("Set 4 món: "+(counts[String(set4)]||0)+"/4 "+name(set4));if(c2(set2)<2)warnings.push("Set phụ: "+c2(set2)+"/2 "+name(set2));
+ const wrong=main.filter(x=>!x.ok);if(wrong.length)warnings.push("Main stat cần xem lại ở slot "+wrong.map(x=>x.slot).join(", "));
+ root.innerHTML="<div class='buildcoach'><div class='section-head'><h3>BUILD COACH // "+esc(guide.name)+"</h3><span class='pill'>Guide "+esc(guide.patch)+"</span></div><div class='hint'>Tự đối chiếu build Enka với guide có nguồn; không cần nhập Goal.</div><div class='coach-summary'><div class='coach-chip'><small>DRIVE DISC SET</small><b>"+esc((counts[String(set4)]||0)+"/4 "+name(set4)+" · "+c2(set2)+"/2 "+name(set2))+"</b></div><div class='coach-chip'><small>MAIN STAT 4/5/6</small><b>"+main.filter(x=>x.ok).length+"/3 đúng</b></div><div class='coach-chip'><small>W-ENGINE</small><b>"+esc(wm.name||"Chưa rõ")+"</b><div class='hint'>"+esc(wid===sig?"Đúng signature":"Guide: "+(sm.name||guide.alternatives?.[0]||"chưa rõ"))+"</div></div></div>"+(warnings.length?"<div class='coach-alert'>"+warnings.map(esc).join("<br>")+"</div>":"<div class='coach-alert'>Set và main stat đang khớp guide đã lưu.</div>")+"<div class='section-head'><h3>ĐÁNH GIÁ 6 ĐĨA</h3></div>"+lines+"<div class='section-head'><h3>ENDGAME BENCHMARK</h3></div><div class='coach-targets'>"+(targets||"Chưa có mốc số cụ thể")+"</div><div class='hint'>"+esc(guide.sourceNote||"")+"</div><div class='coach-source'>"+(guide.sources||[]).map((u,i)=>"<a href='"+esc(u)+"' target='_blank' rel='noopener'>Nguồn "+(i+1)+"</a>").join("")+"</div><div class='hint'>Enka cung cấp trang bị, không cung cấp đầy đủ sheet chỉ số cuối. Benchmark là mốc tham khảo; chưa thể tính % hoàn thành tổng stat.</div></div>";
 }
+function renderResourcePlan(){
+ const a=data[selected]||{},battery=Math.max(0,Number(a.dailyBattery)||0),minutes=Math.max(0,Number(a.dailyMinutes)||0),days=Math.max(1,Math.min(14,Number(a.planDays)||7));
+ const root=document.getElementById("resourcePlan");if(!root)return;
+ const id=Object.keys(gameData?.agents||{}).find(k=>gameData.agents[k].name===selected),guide=buildGuides?.agents?.[id];
+ if(!battery&&!minutes&&!a.resourceNotes){root.innerHTML="<div class='hint'>Nhập Battery/ngày, thời gian rảnh và kho vật liệu để lập lịch. Build tự phân tích ở hồ sơ Agent.</div>";return;}
+ const stage=guide?.farmStage||"Chưa có stage farm được xác minh",runs=Math.floor(battery/60);
+ let rows="";for(let i=1;i<=days;i++)rows+="<div class='coach-priority'><span class='coach-tag'>DAY "+i+"</span><br><b>"+esc(stage)+"</b><div class='hint'>"+(battery?battery+" Battery · khoảng "+runs+" lượt 60 Battery/ngày":"Chưa nhập Battery")+(minutes?" · "+minutes+" phút rảnh":" · Chưa nhập thời gian")+"</div></div>";
+ root.innerHTML="<div class='resource-plan'><div class='coach-tag'>FARM SCHEDULE · "+days+" NGÀY</div><div class='hint'>"+(guide?.farmStage?"Stage lấy từ guide.":"Không đoán dungeon khi chưa có nguồn.")+"</div>"+rows+(a.resourceNotes?"<div class='hint'><b>KHO VẬT LIỆU:</b> "+esc(a.resourceNotes)+"</div>":"")+"</div>";
+}
+function renderCoach(){renderResourcePlan();}
 
 function save(){saveProfile()}
 function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(data).map(n=>`<button class="agent ${n===selected?"active":""}" data-agent="${esc(n)}"><span class="avatar">${esc(n.slice(0,2).toUpperCase())}</span><span><b>${esc(n)}</b><small>${esc(data[n].role)}</small></span></button>`).join("");document.querySelectorAll("[data-agent]").forEach(b=>b.onclick=()=>{selected=b.dataset.agent;save();render()})}
-function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes","dailyBattery","dailyMinutes","planDays","resourceNotes"].forEach(k=>{const el=document.getElementById(k);if(el)el.value=a[k]||""});renderCoach();document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${esc(t.text||t)}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
-["atk","ap","am","notes","goalAtk","goalAp","goalAm","dailyBattery","dailyMinutes","planDays","resourceNotes"].forEach(k=>{const el=document.getElementById(k);if(el)el.addEventListener("input",e=>{data[selected][k]=e.target.value;save();renderCoach()})});
+function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["notes","dailyBattery","dailyMinutes","planDays","resourceNotes"].forEach(k=>{const el=document.getElementById(k);if(el)el.value=a[k]||""});renderCoach();document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${esc(t.text||t)}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
+["notes","dailyBattery","dailyMinutes","planDays","resourceNotes"].forEach(k=>{const el=document.getElementById(k);if(el)el.addEventListener("input",e=>{data[selected][k]=e.target.value;save();renderCoach()})});
 document.getElementById("add").onclick=()=>{let v=document.getElementById("newtask").value.trim();if(v){data[selected].tasks.push({text:v,done:false});document.getElementById("newtask").value="";save();render()}};
-document.getElementById("reset").onclick=()=>{if(confirm("Xóa chỉ số, ghi chú và trạng thái checklist của UID hiện tại?")){const entries=Object.entries(data).map(([name,a])=>[name,{...a,atk:"",ap:"",am:"",notes:"",tasks:(a.tasks||[]).map(t=>typeof t==="string"?{text:t,done:false}:{...t,done:false})}]);data=entries.length?Object.fromEntries(entries):structuredClone(defaults);selected=data[selected]?selected:(Object.keys(data)[0]||"Agent mới");save();render();}};
+document.getElementById("reset").onclick=()=>{if(confirm("Xóa chỉ số, ghi chú và trạng thái checklist của UID hiện tại?")){const entries=Object.entries(data).map(([name,a])=>[name,{...a,notes:"",tasks:(a.tasks||[]).map(t=>typeof t==="string"?{text:t,done:false}:{...t,done:false})}]);data=entries.length?Object.fromEntries(entries):structuredClone(defaults);selected=data[selected]?selected:(Object.keys(data)[0]||"Agent mới");save();render();}};
 loadGameData();
 render();
 </script>
