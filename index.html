@@ -419,7 +419,6 @@ function renderBuildCoach(entry){
  };
  const familyLabel=f=>({121:"ATK%",122:"Impact",123:"PEN",201:"CRIT Rate",211:"CRIT DMG",231:"PEN Ratio",305:"Energy Regen",312:"Anomaly Proficiency",314:"Anomaly Mastery",315:"Physical DMG",316:"Fire DMG",317:"Ice DMG",318:"Electric DMG",319:"Ether DMG",323:"Fire DMG"}[Number(f)]||propertyLabel(Number(f)*100)||("Stat "+f));
  const mainLabel=p=>p?propertyLabel(p.PropertyId??p.propertyId):"Chưa đọc được";
- const valueText=p=>formatProperty(p);
  const priorities=guide.subPriority||[];
  const scoreDisc=d=>{
   const subs=d.e.RandomPropertyList||d.e.randomPropertyList||[];
@@ -440,9 +439,11 @@ function renderBuildCoach(entry){
  };
  const lines=discs.map(d=>{
   const e=d.e,m=discMeta(d),p=(e.MainPropertyList||e.MainStatList||[])[0],q=scoreDisc(d),action=actionFor(d);
-  const subs=q.subs.map(x=>"<span class='disc-sub "+(x.key&&priorities.includes(x.key)?"is-priority":"") +"'>"+esc(valueText(x.p))+(x.key&&priorities.includes(x.key)?" <b>ƯU TIÊN</b>":"")+"</span>").join("");
-  const level=Number(e.Level||0),sid=String(m.suitId||0),setStatus=sid===String(set4)?"Set 4 ưu tiên":Number(sid)===Number(set2)?"Set 2 ưu tiên":"Ngoài set ưu tiên";
-  return "<div class='disc-review'><div class='disc-review-head'><b>SLOT "+d.slot+" · "+esc(m.suitName||"Drive Disc")+"</b><span class='coach-status "+action.tone+"'>"+action.label+"</span></div><div class='disc-review-meta'>Lv."+level+" · "+setStatus+" · "+q.score+"/"+q.subs.length+" dòng sub ưu tiên</div><div class='disc-review-main'><b>Main:</b> "+esc(valueText(p))+"</div><div class='disc-sub-list'>"+(subs||"<span class='hint'>Không đọc được substat</span>")+"</div><div class='disc-review-action'>"+action.detail+"</div></div>";
+  const level=Number(e.Level||0),rarity=Number(gameData?.equipments?.[String(e.Id??e.id??"")]?.Rarity||m.rarity||4),scale=rarity===4?0.2:rarity===3?0.25:0.3;
+  const mainValue=p?formatProperty(p,Number(p.PropertyValue??p.propertyValue??0)*(1+level*scale)):"Chưa đọc được";
+  const subs=q.subs.map(x=>{const rolls=Math.max(1,Number(x.p.PropertyLevel??x.p.propertyLevel??1)),base=Number(x.p.PropertyValue??x.p.propertyValue??0);return "<span class='disc-sub "+(x.key&&priorities.includes(x.key)?"is-priority":"") +"'>"+esc(formatProperty(x.p,base*rolls))+" ×"+rolls+(x.key&&priorities.includes(x.key)?" <b>ƯU TIÊN</b>":"")+"</span>";}).join("");
+  const sid=String(m.suitId||0),setStatus=sid===String(set4)?"Set 4 ưu tiên":Number(sid)===Number(set2)?"Set 2 ưu tiên":"Ngoài set ưu tiên";
+  return "<div class='disc-review'><div class='disc-review-head'><b>SLOT "+d.slot+" · "+esc(m.suitName||"Drive Disc")+"</b><span class='coach-status "+action.tone+"'>"+action.label+"</span></div><div class='disc-review-meta'>Lv."+level+" · "+setStatus+" · "+q.score+"/"+q.subs.length+" dòng sub ưu tiên</div><div class='disc-review-main'><b>Main:</b> "+esc(mainValue)+"</div><div class='disc-sub-list'>"+(subs||"<span class='hint'>Không đọc được substat</span>")+"</div><div class='disc-review-action'>"+action.detail+"</div></div>";
  }).join("");
  const fixActions=[];
  if(set4Count<4){const candidates=discs.filter(d=>String(discMeta(d).suitId||0)!==String(set4));fixActions.push("<b>Set 4 món:</b> "+set4Count+"/4 "+esc(setName(set4))+". Cần thêm "+(4-set4Count)+" món; slot ngoài set hiện tại: "+(candidates.map(d=>"S"+d.slot).join(", ")||"chưa xác định")+". Ưu tiên đổi slot có main sai hoặc substat yếu.");}
