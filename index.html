@@ -314,7 +314,7 @@ function renderBuildCoach(entry){
  const counts={};discs.forEach(d=>{const m=gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{};const k=String(m.suitId||0);counts[k]=(counts[k]||0)+1;});
  const best4=guide.best4||[],best2=guide.best2||[];
  const set4=best4.slice().sort((a,b)=>(counts[b]||0)-(counts[a]||0))[0];
- const remaining=discs.filter(d=>String((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId)!==String(set4));
+ let usedFour=0;const remaining=discs.filter(d=>{const sid=String((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId);if(sid===String(set4)&&usedFour<4){usedFour++;return false;}return true;});
  const c2=id=>remaining.filter(d=>Number((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId)===Number(id)).length;
  const set2=best2.slice().sort((a,b)=>c2(b)-c2(a))[0];
  const name=id=>Object.values(gameData?.discs||{}).find(x=>Number(x.suitId)===Number(id))?.suitName||("Set "+id);
@@ -339,9 +339,10 @@ function renderResourcePlan(){
  const root=document.getElementById("resourcePlan");if(!root)return;
  const id=Object.keys(gameData?.agents||{}).find(k=>gameData.agents[k].name===selected),guide=buildGuides?.agents?.[id];
  if(!battery&&!minutes&&!a.resourceNotes){root.innerHTML="<div class='hint'>Nhập Battery/ngày, thời gian rảnh và kho vật liệu để lập lịch. Build tự phân tích ở hồ sơ Agent.</div>";return;}
- const stage=guide?.farmStage||"Chưa có stage farm được xác minh",runs=Math.floor(battery/60);
- let rows="";for(let i=1;i<=days;i++)rows+="<div class='coach-priority'><span class='coach-tag'>DAY "+i+"</span><br><b>"+esc(stage)+"</b><div class='hint'>"+(battery?battery+" Battery · khoảng "+runs+" lượt 60 Battery/ngày":"Chưa nhập Battery")+(minutes?" · "+minutes+" phút rảnh":" · Chưa nhập thời gian")+"</div></div>";
- root.innerHTML="<div class='resource-plan'><div class='coach-tag'>FARM SCHEDULE · "+days+" NGÀY</div><div class='hint'>"+(guide?.farmStage?"Stage lấy từ guide.":"Không đoán dungeon khi chưa có nguồn.")+"</div>"+rows+(a.resourceNotes?"<div class='hint'><b>KHO VẬT LIỆU:</b> "+esc(a.resourceNotes)+"</div>":"")+"</div>";
+ const stage=guide?.farmStage||"Chưa có stage farm được xác minh",runs=guide?.farmStage?Math.floor(battery/60):null;
+ const shared=guide?.farmStage?getShowcase(activeShowcasePayload||{}).filter(agent=>{const aid=String(agent.Id??agent.id??agent.avatarId??"");return buildGuides?.agents?.[aid]?.farmStage===guide.farmStage;}).map(agent=>{const aid=String(agent.Id??agent.id??agent.avatarId??"");return gameData?.agents?.[aid]?.name||("Agent "+aid);}):[];
+ let rows="";for(let i=1;i<=days;i++)rows+="<div class='coach-priority'><span class='coach-tag'>DAY "+i+"</span><br><b>"+esc(stage)+"</b><div class='hint'>"+(battery?(guide?.farmStage?battery+" Battery · khoảng "+runs+" lượt 60 Battery/ngày":battery+" Battery dự kiến"):"Chưa nhập Battery")+(minutes?" · "+minutes+" phút rảnh":" · Chưa nhập thời gian")+"</div></div>";
+ root.innerHTML="<div class='resource-plan'><div class='coach-tag'>FARM SCHEDULE · "+days+" NGÀY</div><div class='hint'>"+(guide?.farmStage?"Stage lấy từ guide. Cùng stage: "+shared.join(", "):"Không đoán dungeon khi chưa có nguồn.")+"</div>"+rows+(a.resourceNotes?"<div class='hint'><b>KHO VẬT LIỆU:</b> "+esc(a.resourceNotes)+"</div>":"")+"</div>";
 }
 function renderCoach(){renderResourcePlan();}
 
