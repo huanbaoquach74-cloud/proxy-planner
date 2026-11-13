@@ -27,9 +27,10 @@ This is a rule-based checker, not yet a live generative-AI service. It does not 
 
 ## Data limits
 
-Enka's public ZZZ Showcase provides Agent, W-Engine, skill and Drive Disc equipment data. It does not provide a complete final in-game stat sheet, account inventory, material counts, Battery Charge or free-time availability. Therefore:
+Enka's public ZZZ Showcase provides Agent, W-Engine, skill and Drive Disc equipment data, but not a complete final in-game stat sheet, account inventory, material counts, Battery Charge or free-time availability. The stat calculator reconstructs a baseline from the documented data and formulas; some equipment scaling is explicitly approximate. Therefore:
 - Current gear and disc recommendations are checked automatically from Enka.
-- Endgame benchmarks are shown as references, not as an automatically calculated current-stat gap.
+- Current ATK, AP, AM, CR, CD, PEN Ratio and Energy Regen are estimated from Agent base/growth/promotion/core stats, W-Engine, and all six Drive Discs. Enka-documented approximate scaling is used for W-Engine and Drive Disc main stats; disc substat values use their PropertyLevel roll count.
+- The calculated panel is an equipment-derived baseline, not a perfect copy of the in-game character sheet: Drive Disc set bonuses, conditional W-Engine passives, team buffs and combat-state effects are not yet applied. Use it as a transparent estimate, not a guaranteed exact match.
 - Battery Charge, free time and material notes remain user-entered inputs for the schedule.
 - Farming stages are shown only where the bundled guide source verifies them; otherwise the app says the stage is unverified.
 
