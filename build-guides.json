@@ -1,0 +1,397 @@
+{
+  "version": "3.3",
+  "updated": "2026-11-13",
+  "disclaimer": "Guide recommendations are sourced from public build guides. Benchmarks are reference targets, not guaranteed universal breakpoints; team, mindscape, W-Engine and rotation can change priorities.",
+  "agents": {
+    "1031": {
+      "name": "Nicole",
+      "patch": "3.3",
+      "role": "Support",
+      "best4": [
+        33400,
+        32800
+      ],
+      "best2": [
+        33000,
+        32800,
+        31400,
+        31800,
+        31300
+      ],
+      "mainStats": {
+        "4": [
+          312,
+          121
+        ],
+        "5": [
+          319,
+          121
+        ],
+        "6": [
+          305,
+          121
+        ]
+      },
+      "subPriority": [
+        "AP",
+        "ATK%",
+        "PEN%",
+        "ATK"
+      ],
+      "targets": [
+        [
+          "ATK",
+          "2,000–2,400+"
+        ],
+        [
+          "AP",
+          "200–320+"
+        ]
+      ],
+      "signatureWeaponId": 13103,
+      "alternatives": [
+        "Weeping Cradle",
+        "Kaboom the Cannon",
+        "Slice of Time",
+        "[Reverb] Mark III"
+      ],
+      "farmStage": null,
+      "sources": [
+        "https://guildmeta.com/zenless-zone-zero/characters/nicole",
+        "https://mobalytics.gg/zzz/builds/nicole"
+      ],
+      "sourceNote": "3.3 guide comparison: Moonlight Lullaby is the tested support option; Astral Voice/Swing Jazz may fit alternate rotations."
+    },
+    "1101": {
+      "name": "Koleda",
+      "patch": "3.3",
+      "role": "Stun",
+      "best4": [
+        33200
+      ],
+      "best2": [
+        31200
+      ],
+      "mainStats": {
+        "4": [
+          201,
+          211
+        ],
+        "5": [
+          316,
+          121
+        ],
+        "6": [
+          122
+        ]
+      },
+      "subPriority": [
+        "CR",
+        "CD",
+        "ATK%",
+        "PEN%",
+        "ATK"
+      ],
+      "targets": [
+        [
+          "Impact",
+          "166–190+"
+        ],
+        [
+          "CRIT Rate",
+          "50%+"
+        ],
+        [
+          "CRIT DMG",
+          "100–120%+"
+        ]
+      ],
+      "signatureWeaponId": 14110,
+      "alternatives": [
+        "Precious Fossilized Core",
+        "Blazing Laurel",
+        "Steam Oven",
+        "Chief Sidekick"
+      ],
+      "farmStage": null,
+      "sources": [
+        "https://www.prydwen.gg/zenless/characters/koleda",
+        "https://guildmeta.com/zenless-zone-zero/characters/koleda"
+      ],
+      "sourceNote": "King of the Summit's team CRIT DMG effect requires the equipper to reach 50% CRIT Rate."
+    },
+    "1181": {
+      "name": "Grace",
+      "patch": "3.3",
+      "role": "Anomaly",
+      "best4": [
+        32400
+      ],
+      "best2": [
+        31100,
+        33000,
+        31300,
+        32800
+      ],
+      "mainStats": {
+        "4": [
+          312,
+          121
+        ],
+        "5": [
+          231,
+          318,
+          121
+        ],
+        "6": [
+          314
+        ]
+      },
+      "subPriority": [
+        "AP",
+        "ATK%",
+        "PEN%",
+        "ATK"
+      ],
+      "targets": [
+        [
+          "ATK",
+          "2,300–3,000+"
+        ],
+        [
+          "Anomaly Mastery",
+          "150–190+"
+        ],
+        [
+          "AP",
+          "350–450+"
+        ]
+      ],
+      "signatureWeaponId": 14118,
+      "alternatives": [
+        "Timeweaver",
+        "Practiced Perfection",
+        "Weeping Gemini"
+      ],
+      "farmStage": null,
+      "sources": [
+        "https://www.prydwen.gg/zenless/characters/grace-howard",
+        "https://guildmeta.com/zenless-zone-zero/characters/grace"
+      ],
+      "sourceNote": "Prydwen profile updated 11 Nov 2026; Thunder Metal is strongest when Grace can maintain Shock uptime."
+    },
+    "1261": {
+      "name": "Jane",
+      "patch": "3.3",
+      "role": "Anomaly",
+      "best4": [
+        32600
+      ],
+      "best2": [
+        31100,
+        33000,
+        31300,
+        32800,
+        33500
+      ],
+      "mainStats": {
+        "4": [
+          312
+        ],
+        "5": [
+          231,
+          315,
+          121
+        ],
+        "6": [
+          314
+        ]
+      },
+      "subPriority": [
+        "AP",
+        "ATK%",
+        "PEN%",
+        "ATK"
+      ],
+      "targets": [],
+      "signatureWeaponId": 14126,
+      "alternatives": [
+        "Practiced Perfection",
+        "Fusion Compiler",
+        "Weeping Gemini"
+      ],
+      "farmStage": null,
+      "sources": [
+        "https://www.zzz-build.com/agents/jane/build",
+        "https://www.icy-veins.com/zenless-zone-zero/jane-doe-guide-best-builds"
+      ],
+      "sourceNote": "3.3 ZZZBuild guide updated 24 Oct 2026; Jane's team and weapon ranking can shift with Potential Unlock."
+    },
+    "1551": {
+      "name": "Pyrois",
+      "patch": "3.3",
+      "role": "Attack",
+      "best4": [
+        34000
+      ],
+      "best2": [
+        31000
+      ],
+      "mainStats": {
+        "4": [
+          201,
+          211
+        ],
+        "5": [
+          319
+        ],
+        "6": [
+          121
+        ]
+      },
+      "subPriority": [
+        "CR",
+        "CD",
+        "ATK%",
+        "PEN%",
+        "ATK"
+      ],
+      "targets": [],
+      "signatureWeaponId": 14155,
+      "alternatives": [
+        "Riot Suppressor Mark VI",
+        "Cordis Germina",
+        "Neon Fantasies"
+      ],
+      "farmStage": "Pilot and the Rebel Mech",
+      "sources": [
+        "https://www.prydwen.gg/zenless/characters/pyrois",
+        "https://zenlessdb.com/character/pyrois/builds",
+        "https://kayco.app/zzz/agents/pyrois"
+      ],
+      "sourceNote": "Prydwen profile reviewed 11 Nov 2026; ZenlessDB lists a general Attack build. Validate team-specific damage before min-maxing."
+    },
+    "1561": {
+      "name": "Velina",
+      "patch": "3.3",
+      "role": "Anomaly",
+      "best4": [
+        33900
+      ],
+      "best2": [
+        33400,
+        31600
+      ],
+      "mainStats": {
+        "4": [
+          312
+        ],
+        "5": [
+          231,
+          323,
+          121
+        ],
+        "6": [
+          305
+        ]
+      },
+      "subPriority": [
+        "AP",
+        "ATK%",
+        "PEN%",
+        "ATK"
+      ],
+      "targets": [
+        [
+          "ATK",
+          "2,400–2,600+"
+        ],
+        [
+          "AP",
+          "330–420+"
+        ],
+        [
+          "Energy Regen",
+          "2.88"
+        ]
+      ],
+      "targetNotes": [
+        "Level 60 reference; prioritize ER conversion breakpoint and team rotation."
+      ],
+      "signatureWeaponId": 14156,
+      "alternatives": [
+        "Flamemaker Shaker",
+        "Kaboom the Cannon",
+        "Weeping Gemini",
+        "Boisterous Echoes"
+      ],
+      "farmStage": "Pilot and the Rebel Mech",
+      "sources": [
+        "https://www.prydwen.gg/zenless/characters/velina",
+        "https://www.zzz-build.com/agents/velina/build",
+        "https://www.icy-veins.com/zenless-zone-zero/velina-guide-best-builds"
+      ],
+      "sourceNote": "Prydwen endgame targets and stat priorities; ZZZBuild cross-checks 3.3 build. Farm stage paired with The Sky Ablaze per Kayco."
+    },
+    "1641": {
+      "name": "Phoenix",
+      "patch": "3.3",
+      "role": "Anomaly",
+      "best4": [
+        31300
+      ],
+      "best2": [
+        33000
+      ],
+      "mainStats": {
+        "4": [
+          312
+        ],
+        "5": [
+          316,
+          231,
+          121
+        ],
+        "6": [
+          314
+        ]
+      },
+      "subPriority": [
+        "AP",
+        "ATK%",
+        "PEN%",
+        "ATK"
+      ],
+      "targets": [
+        [
+          "Anomaly Mastery",
+          "255"
+        ],
+        [
+          "AP",
+          "330–420+"
+        ],
+        [
+          "ATK",
+          "2,400–2,600+"
+        ]
+      ],
+      "targetNotes": [
+        "AM 255 is the key Nirvana CRIT breakpoint reported by current guides; check team/weapon setup."
+      ],
+      "signatureWeaponId": 14164,
+      "alternatives": [
+        "Angel in the Shell",
+        "Weeping Gemini",
+        "Weeping Gemini (high refinement)"
+      ],
+      "farmStage": null,
+      "sources": [
+        "https://guildmeta.com/zenless-zone-zero/characters/phoenix",
+        "https://www.icy-veins.com/zenless-zone-zero/phoenix-guide-best-builds",
+        "https://games.gg/zenless-zone-zero/guides/phoenix-build-guide/"
+      ],
+      "sourceNote": "3.3 guide cross-check. Main-stat 5 has conditional PEN/Fire options depending on investment and setup."
+    }
+  }
+}
