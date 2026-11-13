@@ -194,23 +194,23 @@ async function fetchEnka(uid){
  const url=setEnkaLink(uid);
  const attempts=[
   {label:"Enka",url},
-  {label:"Enka relay 1",url:"https://api.allorigins.win/raw?url="+encodeURIComponent(url)},
-  {label:"Enka relay 2",url:"https://corsproxy.io/?url="+encodeURIComponent(url)}
+  {label:"AllOrigins",url:"https://api.allorigins.win/raw?url="+encodeURIComponent(url)},
+  {label:"CORS fallback",url:"https://proxy.cors.dev/"+url}
  ];
- let lastError;
+ const errors=[];
  for(const attempt of attempts){
   try{
-   const response=await fetch(attempt.url,{cache:"no-store",headers:{Accept:"application/json"}});
+   const response=await fetch(attempt.url,{cache:"no-store",credentials:"omit",headers:{Accept:"application/json"}});
    if(!response.ok){
-    const messages={400:"UID sai định dạng.",404:"Không tìm thấy UID hoặc Showcase chưa được công khai.",424:"Enka đang bảo trì hoặc vừa cập nhật game.",429:"Enka đang giới hạn truy cập. Hãy đợi hết TTL rồi thử lại.",500:"Enka gặp lỗi máy chủ.",503:"Enka tạm thời không khả dụng."};
-    throw new Error(messages[response.status]||attempt.label+" trả mã "+response.status);
+    const messages={400:"UID sai định dạng.",401:"Máy chủ trung gian từ chối yêu cầu (401), không phải lỗi UID.",403:"Yêu cầu bị từ chối (403).",404:"Không tìm thấy UID hoặc Showcase chưa được công khai.",424:"Enka đang bảo trì hoặc vừa cập nhật game.",429:"Enka đang giới hạn truy cập. Hãy đợi hết TTL rồi thử lại.",500:"Enka gặp lỗi máy chủ.",503:"Enka tạm thời không khả dụng."};
+    throw new Error(messages[response.status]||"trả mã "+response.status);
    }
    const payload=await response.json();
    if(!getShowcase(payload).length)throw new Error("UID không có Showcase công khai hoặc Enka chưa cập nhật.");
    return payload;
-  }catch(error){lastError=error;}
+  }catch(error){errors.push(attempt.label+": "+(error.message||"lỗi kết nối"));}
  }
- throw lastError||new Error("Không thể kết nối Enka.");
+ throw new Error(errors.join(" · ")||"Không thể kết nối Enka.");
 }
 async function syncEnka(){
  const uid=enkaUidInput.value.trim();
