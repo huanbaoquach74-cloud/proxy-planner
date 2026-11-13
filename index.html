@@ -74,6 +74,12 @@ button,.btn,.addrow input,.note,.coach-field input{font-family:inherit}
 .disc-sub b{font-size:8px;letter-spacing:.4px;color:#b8f34a}
 .disc-review-action{font-size:10px;color:#c3cbd1;margin-top:8px;padding-top:7px;border-top:1px dashed #465462}
 .coach-status.good{color:#b8f34a}.coach-status.warn{color:#ffcf68}.coach-status.bad{color:#ff8b72}
+
+.base-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:8px 0 12px}
+.base-stat{background:#111923;border:1px solid #465462;padding:9px;min-width:0}
+.base-stat small{display:block;color:#93a3b0;font-size:9px;letter-spacing:.7px}
+.base-stat b{display:block;color:#f3f0df;font-size:14px;margin-top:4px}
+@media(max-width:700px){.base-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -191,9 +197,12 @@ function renderAgentEnkaDetail(){
   const meta=gameData?.discs?.[discId]||{};
   const mains=e.MainPropertyList||e.MainStatList||e.mainPropertyList||e.mainStatList||[];
   const subs=e.RandomPropertyList||e.randomPropertyList||[];
-  const propLines=(arr)=>arr.map(p=>formatProperty(p)).filter(Boolean);
-  const mainLines=propLines(mains),subLines=propLines(subs);
-  return `<div class="disc-card"><div class="disc-top"><b>SLOT ${esc(slot)} · ${esc(meta.suitName||("Drive Disc "+discId))}</b><span class="disc-level">Lv.${esc(e.Level??e.level??"?")}</span></div><div class="disc-props"><div><span class="disc-label">MAIN STAT</span><br>${mainLines.length?mainLines.map(esc).join("<br>"):"—"}</div><div><span class="disc-label">SUBSTATS</span><br>${subLines.length?subLines.map(esc).join("<br>"):"—"}</div></div></div>`;
+  const rarity=Number(gameData?.equipments?.[discId]?.Rarity||meta.rarity||4),discLevel=Number(e.Level??e.level??0);
+  const scale=rarity===4?0.2:rarity===3?0.25:0.3;
+  const mainLines=mains.map(p=>formatProperty(p,Math.floor(Number(p.PropertyValue??p.propertyValue??0)*(1+discLevel*scale))));
+  const subLines=subs.map(p=>{const rolls=Math.max(1,Number(p.PropertyLevel??p.propertyLevel??1)),base=Number(p.PropertyValue??p.propertyValue??0);return formatProperty(p,base*rolls)+" <span class='hint'>(base "+esc(formatProperty(p,base))+" × "+rolls+" roll)</span>";});
+  const mainBase=mains.map(p=>formatProperty(p));
+  return `<div class="disc-card"><div class="disc-top"><b>SLOT ${esc(slot)} · ${esc(meta.suitName||("Drive Disc "+discId))}</b><span class="disc-level">Lv.${esc(discLevel)}</span></div><div class="disc-props"><div><span class="disc-label">MAIN STAT · BASE → CURRENT</span><br>${mainLines.length?mainLines.map((v,i)=>esc(mainBase[i])+" → "+esc(v)).join("<br>"):"—"}</div><div><span class="disc-label">SUBSTATS · CURRENT VALUE</span><br>${subLines.length?subLines.join("<br>"):"—"}</div></div></div>`;
  }).join("");
  root.innerHTML=`<div class="section-head"><h3>HỒ SƠ ENKA // ${esc(selected)}</h3><span class="pill">Lv. ${esc(level)}</span></div><div class="agent-meta-grid"><div class="agent-meta"><span class="disc-label">MINDscape</span><b>${esc(mind)}</b></div><div class="agent-meta"><span class="disc-label">CORE SKILL</span><b>${esc(core)}</b></div><div class="agent-meta"><span class="disc-label">W-ENGINE</span><b>${weaponLine}</b></div></div>${skillText?`<div class="hint" style="margin:10px 0 14px">KỸ NĂNG · ${esc(skillText)}</div>`:""}<div class="section-head" style="margin-top:14px"><h3>DRIVE DISC // 6 SLOTS</h3><span class="hint">${discs.length}/6</span></div><div class="disc-grid">${discCards||'<div class="hint">Showcase chưa có Drive Disc.</div>'}</div>`;
  renderBuildCoach(entry);
@@ -208,13 +217,14 @@ function propertyLabel(id){
  const meta=gameData?.properties?.[String(id)];
  return meta?.name||("Property "+id);
 }
-function formatProperty(p){
+function formatProperty(p,valueOverride){
  const id=Number(p.PropertyId??p.propertyId);
- const raw=Number(p.PropertyValue??p.propertyValue??0);
+ const raw=valueOverride===undefined?Number(p.PropertyValue??p.propertyValue??0):Number(valueOverride||0);
  const format=gameData?.properties?.[String(id)]?.format||"";
- const value=format.includes("%")?(raw/100).toFixed(1)+"%":String(raw);
+ const value=format.includes("%")?(raw/100).toFixed(1)+"%":String(Math.round(raw*10)/10);
  return propertyLabel(id)+" "+value;
 }
+
 async function loadGameData(){
  try{
   const response=await fetch("./game-data.json",{cache:"force-cache"});
@@ -324,47 +334,62 @@ function statFamily(p){const id=Number(p?.PropertyId??p?.propertyId??0);return M
 function calculateCurrentStats(entry){
  const id=String(entry.Id??entry.id??entry.avatarId??""),agent=gameData?.agents?.[id]||{};
  const level=Number(entry.Level||1),promo=Math.max(0,Number(entry.PromotionLevel||0)-1),core=Math.max(0,Math.min(6,Number(entry.CoreSkillEnhancement||0)));
- const raw={};
- const add=(pid,val)=>{pid=String(pid);raw[pid]=(raw[pid]||0)+Number(val||0);};
+ const agentRaw={};
+ const addTo=(target,pid,val)=>{pid=String(pid);target[pid]=(target[pid]||0)+Number(val||0);};
  const keys=new Set([...Object.keys(agent.baseProps||{}),...Object.keys(agent.growthProps||{}),...Object.keys(agent.promotionProps?.[promo]||{}),...Object.keys(agent.coreEnhancementProps?.[core]||{})]);
  for(const k of keys){
   const base=Number(agent.baseProps?.[k]||0);
   const growth=Math.floor(Number(agent.growthProps?.[k]||0)*(level-1)/10000);
   const promotion=Number(agent.promotionProps?.[promo]?.[k]||0);
   const coreValue=Number(agent.coreEnhancementProps?.[core]?.[k]||0);
-  add(k,base+growth+promotion+coreValue);
+  agentRaw[k]=base+growth+promotion+coreValue;
  }
- const weapon=entry.Weapon||entry.weapon||{},wid=String(weapon.Id??weapon.id??""),wm=gameData?.weapons?.[wid]||{};
+ const raw={...agentRaw},weapon=entry.Weapon||entry.weapon||{},wid=String(weapon.Id??weapon.id??""),wm=gameData?.weapons?.[wid]||{};
  const wLevel=Number(weapon.Level||1),wBreak=Number(weapon.BreakLevel||0);
- if(wm.mainStat){const p=wm.mainStat;add(p.PropertyId,Math.floor(Number(p.PropertyValue||0)*(1+0.1568166666666667*wLevel+0.8922*wBreak)));}
- if(wm.secondaryStat){const p=wm.secondaryStat;add(p.PropertyId,Math.floor(Number(p.PropertyValue||0)*(1+0.3*wBreak)));}
- const discs=entry.EquippedList||entry.equippedList||[];
+ let weaponAtk=0;
+ const weaponStats={};
+ if(wm.mainStat){
+  const p=wm.mainStat,val=Math.floor(Number(p.PropertyValue||0)*(1+0.1568166666666667*wLevel+0.8922*wBreak));
+  addTo(raw,p.PropertyId,val);addTo(weaponStats,p.PropertyId,val);
+  if(Number(p.PropertyId)===12101)weaponAtk=val;
+ }
+ if(wm.secondaryStat){
+  const p=wm.secondaryStat,val=Math.floor(Number(p.PropertyValue||0)*(1+0.3*wBreak));
+  addTo(raw,p.PropertyId,val);addTo(weaponStats,p.PropertyId,val);
+ }
+ const discs=entry.EquippedList||entry.equippedList||[],discStats={};
  for(const item of discs){
-  const e=item.Equipment||item.equipment||item,discId=String(e.Id??e.id??""),rarity=Number(gameData?.equipments?.[discId]?.Rarity||gameData?.discs?.[discId]?.rarity||4);
+  const e=item.Equipment||item.equipment||item,discId=String(e.Id??e.id??"");
+  const rarity=Number(gameData?.equipments?.[discId]?.Rarity||gameData?.discs?.[discId]?.rarity||4);
   const rarityScale=rarity===4?0.2:rarity===3?0.25:0.3,discLevel=Number(e.Level||0);
   const mains=e.MainStatList||e.MainPropertyList||e.mainStatList||[];
-  for(const p of mains){const val=Math.floor(Number(p.PropertyValue||0)*(1+discLevel*rarityScale));add(p.PropertyId,val);}
+  for(const p of mains){const val=Math.floor(Number(p.PropertyValue||0)*(1+discLevel*rarityScale));addTo(raw,p.PropertyId,val);addTo(discStats,p.PropertyId,val);}
   const subs=e.RandomPropertyList||e.randomPropertyList||[];
-  for(const p of subs){add(p.PropertyId,Number(p.PropertyValue||0)*Math.max(1,Number(p.PropertyLevel||1)));}
+  for(const p of subs){const val=Number(p.PropertyValue||0)*Math.max(1,Number(p.PropertyLevel||1));addTo(raw,p.PropertyId,val);addTo(discStats,p.PropertyId,val);}
  }
- const baseAtk=raw["12101"]||0,atkPct=raw["12102"]||0,flatAtk=raw["12103"]||0;
- const atk=Math.floor(baseAtk*(1+atkPct/10000)+flatAtk);
+ const agentBaseAtk=agentRaw["12101"]||0,totalBaseAtk=agentBaseAtk+weaponAtk;
+ const atkPct=raw["12102"]||0,flatAtk=raw["12103"]||0;
+ const atk=Math.floor(totalBaseAtk*(1+atkPct/10000)+flatAtk);
  const ap=Math.round((raw["31201"]||0)+(raw["31203"]||0));
  const am=Math.round(((raw["31401"]||0)*(1+(raw["31402"]||0)/10000))+(raw["31403"]||0));
  const cr=((raw["20101"]||0)+(raw["20103"]||0))/100;
  const cd=((raw["21101"]||0)+(raw["21103"]||0))/100;
  const penRatio=((raw["23101"]||0)+(raw["23103"]||0))/100;
  const er=((raw["30501"]||0)/100)*(1+(raw["30502"]||0)/10000)+((raw["30503"]||0)/100);
- const result={atk,ap,am,cr,cd,penRatio,er,baseAtk,weaponAtk:Math.max(0,(wm.mainStat?.PropertyId===12101?Math.floor(Number(wm.mainStat.PropertyValue||0)*(1+0.1568166666666667*wLevel+0.8922*wBreak)):0)),atkPct:atkPct/100,flatAtk,raw,discs:discs.length,weaponLevel:wLevel};
- return result;
+ const agentBase={atk:agentBaseAtk,ap:(agentRaw["31201"]||0)+(agentRaw["31203"]||0),am:(agentRaw["31401"]||0)+(agentRaw["31403"]||0),cr:((agentRaw["20101"]||0)+(agentRaw["20103"]||0))/100,cd:((agentRaw["21101"]||0)+(agentRaw["21103"]||0))/100};
+ return {atk,ap,am,cr,cd,penRatio,er,baseAtk:agentBaseAtk,agentBase,totalBaseAtk,weaponAtk,atkPct:atkPct/100,flatAtk,raw,agentRaw,weaponStats,discStats,discs:discs.length,weaponLevel:wLevel};
 }
+
 function renderCalculatedStats(entry,guide){
  const x=calculateCurrentStats(entry);
  const values=[["ATK",x.atk.toLocaleString("en-US"),"ATK"],["AP",x.ap.toLocaleString("en-US"),"AP"],["AM",x.am.toLocaleString("en-US"),"AM"],["CR",x.cr.toFixed(1)+"%","CR"],["CD",x.cd.toFixed(1)+"%","CD"],["PEN Ratio",x.penRatio.toFixed(1)+"%","PEN"],["Energy Regen",x.er.toFixed(2),"Energy Regen"]];
  const targetMap=Object.fromEntries((guide.targets||[]).map(t=>[t[0],t[1]]));
  const cards=values.map(v=>"<div class='coach-chip'><small>"+v[0]+"</small><b>"+v[1]+"</b>"+(targetMap[v[2]]?"<div class='hint'>Guide: "+esc(targetMap[v[2]])+"</div>":"")+"</div>").join("");
- return "<div class='section-head' style='margin-top:14px'><h3>CALCULATED BUILD STATS</h3><span class='pill'>Ước tính từ Enka</span></div><div class='coach-summary'>"+cards+"</div><div class='hint'>ATK = Base ATK (Agent + W-Engine) × (1 + ATK%) + flat ATK. AP/AM cộng từ Agent, Core Skill, W-Engine và Drive Disc. Đã dùng công thức scale xấp xỉ công bố của Enka cho W-Engine và main stat đĩa; substat nhân PropertyLevel. Chưa cộng buff set, passive có điều kiện, buff đồng đội hoặc combat state.</div>";
+ const baseCards=[["AGENT BASE ATK",Math.round(x.agentBase.atk)],["W-ENGINE BASE ATK",Math.round(x.weaponAtk)],["TOTAL BASE ATK",Math.round(x.totalBaseAtk)],["AGENT BASE AP",Math.round(x.agentBase.ap)],["AGENT BASE AM",Math.round(x.agentBase.am)],["AGENT BASE CR",x.agentBase.cr.toFixed(1)+"%"],["AGENT BASE CD",x.agentBase.cd.toFixed(1)+"%"]];
+ const baseHtml=baseCards.map(v=>"<div class='base-stat'><small>"+v[0]+"</small><b>"+v[1]+"</b></div>").join("");
+ return "<div class='section-head' style='margin-top:14px'><h3>CALCULATED BUILD STATS</h3><span class='pill'>Ước tính từ Enka</span></div><div class='coach-summary'>"+cards+"</div><div class='section-head'><h3>BASE STAT BREAKDOWN</h3><span class='hint'>Agent level + promotion + Core, trước gear/buff</span></div><div class='base-stat-grid'>"+baseHtml+"</div><div class='hint'>ATK cuối = (Agent Base ATK + W-Engine ATK) × (1 + ATK%) + flat ATK. Agent Base AP/AM/CR/CD đã tính level, promotion và Core Skill; W-Engine và Drive Disc được cộng riêng sau đó. Chưa cộng buff set, passive có điều kiện, buff đồng đội hoặc combat state.</div>";
 }
+
 function renderBuildCoach(entry){
  const root=document.getElementById("agentBuildCoach");if(!root)return;
  if(!entry){root.innerHTML="<div class='hint'>Đồng bộ Showcase để web tự phân tích build.</div>";return;}
