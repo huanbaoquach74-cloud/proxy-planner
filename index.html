@@ -258,39 +258,30 @@ function switchProfile(uid){
  render();
 }
 async function fetchEnka(uid){
- // Bust both the browser cache and intermediary proxy/CDN caches on every manual refresh.
- const cacheBust=Date.now();
- const url=setEnkaLink(uid)+"?_"+cacheBust;
+ const url=setEnkaLink(uid);
  const attempts=[
   {label:"Enka",url},
-  {label:"AllOrigins",url:"https://api.allorigins.win/raw?url="+encodeURIComponent(url)+"&_="+cacheBust},
+  {label:"AllOrigins",url:"https://api.allorigins.win/raw?url="+encodeURIComponent(url)},
   {label:"CORS fallback",url:"https://proxy.cors.dev/"+url}
  ];
- const controllers=attempts.map(()=>new AbortController());
- const timers=[];
- const requests=attempts.map((attempt,index)=>(async()=>{
-  const timer=setTimeout(()=>controllers[index].abort(),6500);
-  timers.push(timer);
+ const errors=[];
+ // Try sources sequentially: Enka's UID endpoint has its own TTL and rate limit.
+ for(const attempt of attempts){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),8000);
   try{
-   const response=await fetch(attempt.url,{cache:"no-store",credentials:"omit",headers:{Accept:"application/json"},signal:controllers[index].signal});
+   const response=await fetch(attempt.url,{cache:"no-store",credentials:"omit",headers:{Accept:"application/json"},signal:controller.signal});
    if(!response.ok)throw new Error(attempt.label+" trả mã "+response.status);
    const payload=await response.json();
-   if(!getShowcase(payload).length)throw new Error(attempt.label+": UID không có Showcase công khai hoặc Enka chưa cập nhật.");
-   return payload;
+   if(!getShowcase(payload).length)throw new Error(attempt.label+": UID không có Showcase công khai hoặc dữ liệu rỗng.");
+   return {payload,source:attempt.label};
   }catch(error){
-   if(error.name==="AbortError")throw new Error(attempt.label+": quá thời gian chờ 6,5 giây.");
-   throw error;
-  }finally{clearTimeout(timer);}
- })());
- try{
-  return await Promise.any(requests);
- }catch(error){
-  const messages=(error.errors||[]).map(e=>e.message||"lỗi kết nối");
-  throw new Error(messages.join(" · ")||"Không thể kết nối Enka.");
- }finally{
-  controllers.forEach(c=>c.abort());
-  timers.forEach(clearTimeout);
+   errors.push(error.name==="AbortError"?attempt.label+": quá thời gian chờ 8 giây.":(error.message||attempt.label+": lỗi kết nối"));
+  }finally{
+   clearTimeout(timer);
+  }
  }
+ throw new Error(errors.join(" · ")||"Không thể kết nối Enka.");
 }
 async function syncEnka(forceRefresh=false){
  const uid=enkaUidInput.value.trim();
@@ -311,12 +302,16 @@ async function syncEnka(forceRefresh=false){
  enkaStatus.textContent="Đang tải Showcase cho UID "+uid+"…";
  const button=document.getElementById("enkaSync");button.disabled=true;
  try{
-  const payload=await fetchEnka(uid);
-  const cache={uid,data:payload,time:Date.now(),nextAt:Date.now()+Math.max(60,Number(payload.ttl)||300)*1000};
+  const result=await fetchEnka(uid);
+  const payload=result.payload;
+  const ttlRaw=Number(payload.ttl);
+  const ttl=Number.isFinite(ttlRaw)?Math.max(0,ttlRaw):300;
+  const cache={uid,data:payload,time:Date.now(),nextAt:Date.now()+Math.max(5,ttl)*1000};
   localStorage.setItem("enkaCache:"+uid,JSON.stringify(cache));
   syncPlannerAgents(payload);
   renderEnka(payload);
-  enkaStatus.textContent="Đồng bộ thành công · "+new Date(cache.time).toLocaleTimeString("vi-VN")+" · dữ liệu Showcase công khai.";
+  const ttlText=ttl>0?" Enka đang giữ bản cache này thêm khoảng "+Math.ceil(ttl/60)+" phút; app không thể ép máy chủ Enka lấy Showcase mới trước khi TTL hết.":" Enka báo TTL đã hết; dữ liệu sẽ được làm mới ở lần truy vấn tiếp theo.";
+  enkaStatus.textContent="Đã nhận dữ liệu từ "+result.source+" · "+new Date(cache.time).toLocaleTimeString("vi-VN")+"."+ttlText;
  }catch(error){
   const cached=showCachedEnka(uid);
   enkaStatus.textContent="Chưa tải được dữ liệu mới: "+error.message+(cached?" Đang giữ bản gần nhất.":" Kiểm tra UID và quyền hiển thị Showcase trong game.");
