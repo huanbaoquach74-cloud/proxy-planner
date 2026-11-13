@@ -83,7 +83,6 @@ footer{color:#7f8e9a;letter-spacing:.7px;text-transform:uppercase;font-size:9px}
 <div class="stat"><label>AM</label><input id="am" inputmode="decimal" placeholder="Nhập AM"></div>
 </div></section>
 
-<section class="panel section"><div class="section-head"><h3>Build Goal // Mục tiêu chỉ số</h3><span class="pill">Theo từng Agent</span></div><div class="hint">Current Build là số ông nhập/đối chiếu từ game. Goal được lưu riêng và không bị ghi đè khi đồng bộ Enka.</div><div class="coach-grid"><div class="coach-field"><label>Goal ATK</label><input id="goalAtk" type="number" min="0" placeholder="VD: 3000"></div><div class="coach-field"><label>Goal AP</label><input id="goalAp" type="number" min="0" placeholder="VD: 400"></div><div class="coach-field"><label>Goal AM</label><input id="goalAm" type="number" min="0" placeholder="VD: 200"></div></div><div id="coachAnalysis" class="coach-result"><div class="hint">Nhập Current Build và Goal để xem khoảng cách chỉ số.</div></div></section>
 <section class="panel section"><div class="section-head"><h3>Resource Planner // Lịch farm</h3><span class="pill">Kế hoạch cá nhân</span></div><div class="hint">Enka không đọc được Battery Charge, kho vật liệu hoặc thời gian rảnh. Nhập các dữ liệu này để planner chia lịch thực tế hơn.</div><div class="coach-grid"><div class="coach-field"><label>Battery / ngày</label><input id="dailyBattery" type="number" min="0" max="240" placeholder="VD: 180"></div><div class="coach-field"><label>Phút rảnh / ngày</label><input id="dailyMinutes" type="number" min="0" max="1440" placeholder="VD: 45"></div><div class="coach-field"><label>Số ngày muốn lập</label><input id="planDays" type="number" min="1" max="14" placeholder="7"></div></div><div class="coach-field"><label>Vật liệu đang có / cần farm</label><textarea class="note" id="resourceNotes" placeholder="VD: 12 chip Dị thường, thiếu 8 chip cấp cao; dennies còn 300k..."></textarea></div><div id="resourcePlan" class="coach-result"><div class="hint">Nhập thời gian và Battery Charge để tạo lịch farm sơ bộ.</div></div></section>
 <section class="panel section"><div class="section-head"><h3>Thứ tự công việc</h3><b id="count">0/0</b></div><div class="hint">Tick khi hoàn thành. Tiến độ được lưu tự động.</div><div class="progress"><div class="bar" id="bar"></div></div><div id="tasks"></div><div class="addrow"><input id="newtask" placeholder="Thêm việc cần làm..."><button id="add">Thêm</button></div></section>
 <section class="panel section"><div class="section-head"><h3>Ghi chú build</h3><span class="hint">W-Engine · Drive Disc · mục tiêu</span></div><textarea class="note" id="notes" placeholder="Ví dụ: W-Engine đang dùng, bộ đĩa, món cần farm..."></textarea></section>
@@ -92,7 +91,7 @@ footer{color:#7f8e9a;letter-spacing:.7px;text-transform:uppercase;font-size:9px}
 </main>
 <script>
 const defaults={
- "Agent mới":{role:"Đồng bộ UID để tải Agent",atk:"",ap:"",am:"",goalAtk:"",goalAp:"",goalAm:"",dailyBattery:"",dailyMinutes:"",planDays:"7",resourceNotes:"",notes:"",tasks:[]}
+ "Agent mới":{role:"Đồng bộ UID để tải Agent",atk:"",ap:"",am:"",dailyBattery:"",dailyMinutes:"",planDays:"7",resourceNotes:"",notes:"",tasks:[]}
 };
 const PROFILE_KEY="proxyPlannerProfiles";
 let profiles=JSON.parse(localStorage.getItem(PROFILE_KEY)||"{}");
@@ -304,7 +303,7 @@ setInterval(()=>{if(activeUid)syncEnka();},30*60*1000);
 
 function renderCoach(){
  const a=data[selected]||{};
- const metrics=[["ATK","atk","goalAtk"],["AP","ap","goalAp"],["AM","am","goalAm"]];
+ const metrics=[];
  const rows=metrics.map(([label,currentKey,goalKey])=>{
   const cur=Number(a[currentKey]),goal=Number(a[goalKey]);
   if(!a[currentKey]||!a[goalKey]||!Number.isFinite(cur)||!Number.isFinite(goal)||goal<=0)return null;
@@ -312,7 +311,7 @@ function renderCoach(){
   return {label,cur,goal,pct,gap:goal-cur};
  }).filter(Boolean);
  const analysis=document.getElementById("coachAnalysis");
- if(!rows.length)analysis.innerHTML='<div class="hint">Nhập Current ATK/AP/AM và Goal tương ứng. Chỉ số chưa đủ dữ liệu sẽ không bị đoán.</div>';
+ if(!rows.length)analysis.innerHTML='<div class="hint">Mục tiêu build sẽ được hệ thống tự xác định từ Agent, bộ kỹ năng, W-Engine, Drive Disc và hướng dẫn build đã đối chiếu. Không cần nhập Goal thủ công.</div>';
  else{
   const sorted=rows.slice().sort((x,y)=>(y.gap/y.goal)-(x.gap/x.goal));
   analysis.innerHTML='<div class="coach-tag">BUILD GAP ANALYSIS · '+rows.length+' CHỈ SỐ</div>'+sorted.map(r=>'<div class="coach-line"><b>'+r.label+'</b><div><div class="mini-track"><div class="mini-fill" style="width:'+r.pct+'%"></div></div><div class="hint">'+r.cur.toLocaleString("vi-VN")+' / '+r.goal.toLocaleString("vi-VN")+'</div></div><b>'+(r.gap>0?'-'+r.gap.toLocaleString("vi-VN"):'ĐẠT')+'</b></div>').join('')+'<div class="hint" style="margin-top:9px">Ưu tiên theo tỷ lệ thiếu so với mục tiêu, không tự kết luận chỉ số nào quan trọng hơn về meta.</div>';
@@ -327,12 +326,12 @@ function renderCoach(){
   const time=minutes?minutes:0;
   return '<div class="coach-priority"><span class="coach-tag">DAY '+(i+1)+'</span><br><b>'+target+'</b><div class="hint">'+(battery?battery+' Battery Charge dự kiến · ':'')+(minutes?time+' phút cho phiên farm':'Chưa nhập thời gian rảnh')+(a.resourceNotes?' · Đối chiếu kho vật liệu đã ghi':'')+'</div></div>';
  }).join('');
- plan.innerHTML='<div class="coach-tag">FARM PLAN · '+days+' NGÀY</div><div class="hint" style="margin:7px 0 10px">Ưu tiên build hiện tại: <b>'+focus+'</b>. Đây là lịch phân bổ thời gian sơ bộ, chưa phải tính toán drop rate hay lượng vật liệu chính xác.</div>'+schedule+(a.resourceNotes?'<div class="hint" style="margin-top:10px"><b>GHI CHÚ TÀI NGUYÊN:</b> '+esc(a.resourceNotes)+'</div>':'');
+ plan.innerHTML='<div class="coach-tag">FARM PLAN · '+days+' NGÀY</div><div class="hint" style="margin:7px 0 10px">Ưu tiên build sẽ được lấy từ phân tích tự động khi bộ máy build coach hoàn tất. Đây hiện chỉ là khung lịch; chưa tính drop rate hay lượng vật liệu chính xác.</div>'+schedule+(a.resourceNotes?'<div class="hint" style="margin-top:10px"><b>GHI CHÚ TÀI NGUYÊN:</b> '+esc(a.resourceNotes)+'</div>':'');
 }
 
 function save(){saveProfile()}
 function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(data).map(n=>`<button class="agent ${n===selected?"active":""}" data-agent="${esc(n)}"><span class="avatar">${esc(n.slice(0,2).toUpperCase())}</span><span><b>${esc(n)}</b><small>${esc(data[n].role)}</small></span></button>`).join("");document.querySelectorAll("[data-agent]").forEach(b=>b.onclick=()=>{selected=b.dataset.agent;save();render()})}
-function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes","goalAtk","goalAp","goalAm","dailyBattery","dailyMinutes","planDays","resourceNotes"].forEach(k=>{const el=document.getElementById(k);if(el)el.value=a[k]||""});renderCoach();document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${esc(t.text||t)}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
+function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes","dailyBattery","dailyMinutes","planDays","resourceNotes"].forEach(k=>{const el=document.getElementById(k);if(el)el.value=a[k]||""});renderCoach();document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${esc(t.text||t)}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
 ["atk","ap","am","notes","goalAtk","goalAp","goalAm","dailyBattery","dailyMinutes","planDays","resourceNotes"].forEach(k=>{const el=document.getElementById(k);if(el)el.addEventListener("input",e=>{data[selected][k]=e.target.value;save();renderCoach()})});
 document.getElementById("add").onclick=()=>{let v=document.getElementById("newtask").value.trim();if(v){data[selected].tasks.push({text:v,done:false});document.getElementById("newtask").value="";save();render()}};
 document.getElementById("reset").onclick=()=>{if(confirm("Xóa chỉ số, ghi chú và trạng thái checklist của UID hiện tại?")){const entries=Object.entries(data).map(([name,a])=>[name,{...a,atk:"",ap:"",am:"",notes:"",tasks:(a.tasks||[]).map(t=>typeof t==="string"?{text:t,done:false}:{...t,done:false})}]);data=entries.length?Object.fromEntries(entries):structuredClone(defaults);selected=data[selected]?selected:(Object.keys(data)[0]||"Agent mới");save();render();}};
