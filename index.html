@@ -305,6 +305,50 @@ setInterval(()=>{if(activeUid)syncEnka();},30*60*1000);
 
 
 function statFamily(p){const id=Number(p?.PropertyId??p?.propertyId??0);return Math.floor(id/100);}
+
+function calculateCurrentStats(entry){
+ const id=String(entry.Id??entry.id??entry.avatarId??""),agent=gameData?.agents?.[id]||{};
+ const level=Number(entry.Level||1),promo=Math.max(0,Number(entry.PromotionLevel||0)-1),core=Math.max(0,Math.min(6,Number(entry.CoreSkillEnhancement||0)));
+ const raw={};
+ const add=(pid,val)=>{pid=String(pid);raw[pid]=(raw[pid]||0)+Number(val||0);};
+ const keys=new Set([...Object.keys(agent.baseProps||{}),...Object.keys(agent.growthProps||{}),...Object.keys(agent.promotionProps?.[promo]||{}),...Object.keys(agent.coreEnhancementProps?.[core]||{})]);
+ for(const k of keys){
+  const base=Number(agent.baseProps?.[k]||0);
+  const growth=Math.floor(Number(agent.growthProps?.[k]||0)*(level-1)/10000);
+  const promotion=Number(agent.promotionProps?.[promo]?.[k]||0);
+  const coreValue=Number(agent.coreEnhancementProps?.[core]?.[k]||0);
+  add(k,base+growth+promotion+coreValue);
+ }
+ const weapon=entry.Weapon||entry.weapon||{},wid=String(weapon.Id??weapon.id??""),wm=gameData?.weapons?.[wid]||{};
+ const wLevel=Number(weapon.Level||1),wBreak=Number(weapon.BreakLevel||0);
+ if(wm.mainStat){const p=wm.mainStat;add(p.PropertyId,Math.floor(Number(p.PropertyValue||0)*(1+0.1568166666666667*wLevel+0.8922*wBreak)));}
+ if(wm.secondaryStat){const p=wm.secondaryStat;add(p.PropertyId,Math.floor(Number(p.PropertyValue||0)*(1+0.3*wBreak)));}
+ const discs=entry.EquippedList||entry.equippedList||[];
+ for(const item of discs){
+  const e=item.Equipment||item.equipment||item,discId=String(e.Id??e.id??""),rarity=Number(gameData?.equipments?.[discId]?.Rarity||gameData?.discs?.[discId]?.rarity||4);
+  const rarityScale=rarity===4?0.2:rarity===3?0.25:0.3,discLevel=Number(e.Level||0);
+  const mains=e.MainStatList||e.MainPropertyList||e.mainStatList||[];
+  for(const p of mains){const val=Math.floor(Number(p.PropertyValue||0)*(1+discLevel*rarityScale));add(p.PropertyId,val);}
+  const subs=e.RandomPropertyList||e.randomPropertyList||[];
+  for(const p of subs){add(p.PropertyId,Number(p.PropertyValue||0)*Math.max(1,Number(p.PropertyLevel||1)));}
+ }
+ const baseAtk=raw["12101"]||0,atkPct=raw["12102"]||0,flatAtk=raw["12103"]||0;
+ const atk=Math.floor(baseAtk*(1+atkPct/10000)+flatAtk);
+ const ap=Math.round((raw["31201"]||0)+(raw["31203"]||0));
+ const am=Math.round(((raw["31401"]||0)*(1+(raw["31402"]||0)/10000))+(raw["31403"]||0));
+ const cr=((raw["20101"]||0)+(raw["20103"]||0))/100;
+ const cd=((raw["21101"]||0)+(raw["21103"]||0))/100;
+ const penRatio=((raw["23101"]||0)+(raw["23103"]||0))/100;
+ const result={atk,ap,am,cr,cd,penRatio,baseAtk,weaponAtk:Math.max(0,(wm.mainStat?.PropertyId===12101?Math.floor(Number(wm.mainStat.PropertyValue||0)*(1+0.1568166666666667*wLevel+0.8922*wBreak)):0)),atkPct:atkPct/100,flatAtk,raw,discs:discs.length,weaponLevel:wLevel};
+ return result;
+}
+function renderCalculatedStats(entry,guide){
+ const x=calculateCurrentStats(entry);
+ const values=[["ATK",x.atk.toLocaleString("en-US"),"ATK"],["AP",x.ap.toLocaleString("en-US"),"AP"],["AM",x.am.toLocaleString("en-US"),"AM"],["CR",x.cr.toFixed(1)+"%","CR"],["CD",x.cd.toFixed(1)+"%","CD"],["PEN Ratio",x.penRatio.toFixed(1)+"%","PEN"]];
+ const targetMap=Object.fromEntries((guide.targets||[]).map(t=>[t[0],t[1]]));
+ const cards=values.map(v=>"<div class='coach-chip'><small>"+v[0]+"</small><b>"+v[1]+"</b>"+(targetMap[v[2]]?"<div class='hint'>Guide: "+esc(targetMap[v[2]])+"</div>":"")+"</div>").join("");
+ return "<div class='section-head' style='margin-top:14px'><h3>CALCULATED BUILD STATS</h3><span class='pill'>Ước tính từ Enka</span></div><div class='coach-summary'>"+cards+"</div><div class='hint'>ATK = Base ATK (Agent + W-Engine) × (1 + ATK%) + flat ATK. AP/AM cộng từ Agent, Core Skill, W-Engine và Drive Disc. Đã dùng công thức scale xấp xỉ công bố của Enka cho W-Engine và main stat đĩa; substat nhân PropertyLevel. Chưa cộng buff set, passive có điều kiện, buff đồng đội hoặc combat state.</div>";
+}
 function renderBuildCoach(entry){
  const root=document.getElementById("agentBuildCoach");if(!root)return;
  if(!entry){root.innerHTML="<div class='hint'>Đồng bộ Showcase để web tự phân tích build.</div>";return;}
@@ -332,7 +376,7 @@ function renderBuildCoach(entry){
  const weapon=entry.Weapon||{},wid=Number(weapon.Id||0),sig=Number(guide.signatureWeaponId||0),wm=gameData?.weapons?.[String(wid)]||{},sm=gameData?.weapons?.[String(sig)]||{};
  const warnings=[];if(Number(counts[String(set4)]||0)<4)warnings.push("Set 4 món: "+(counts[String(set4)]||0)+"/4 "+name(set4));if(c2(set2)<2)warnings.push("Set phụ: "+c2(set2)+"/2 "+name(set2));
  const wrong=main.filter(x=>!x.ok);if(wrong.length)warnings.push("Main stat cần xem lại ở slot "+wrong.map(x=>x.slot).join(", "));
- root.innerHTML="<div class='buildcoach'><div class='section-head'><h3>BUILD COACH // "+esc(guide.name)+"</h3><span class='pill'>Guide "+esc(guide.patch)+"</span></div><div class='hint'>Tự đối chiếu build Enka với guide có nguồn; không cần nhập Goal.</div><div class='coach-summary'><div class='coach-chip'><small>DRIVE DISC SET</small><b>"+esc((counts[String(set4)]||0)+"/4 "+name(set4)+" · "+c2(set2)+"/2 "+name(set2))+"</b></div><div class='coach-chip'><small>MAIN STAT 4/5/6</small><b>"+main.filter(x=>x.ok).length+"/3 đúng</b></div><div class='coach-chip'><small>W-ENGINE</small><b>"+esc(wm.name||"Chưa rõ")+"</b><div class='hint'>"+esc(wid===sig?"Đúng signature":"Guide: "+(sm.name||guide.alternatives?.[0]||"chưa rõ"))+"</div></div></div>"+(warnings.length?"<div class='coach-alert'>"+warnings.map(esc).join("<br>")+"</div>":"<div class='coach-alert'>Set và main stat đang khớp guide đã lưu.</div>")+"<div class='section-head'><h3>ĐÁNH GIÁ 6 ĐĨA</h3></div>"+lines+"<div class='section-head'><h3>ENDGAME BENCHMARK</h3></div><div class='coach-targets'>"+(targets||"Chưa có mốc số cụ thể")+"</div><div class='hint'>"+esc(guide.sourceNote||"")+"</div><div class='coach-source'>"+(guide.sources||[]).map((u,i)=>"<a href='"+esc(u)+"' target='_blank' rel='noopener'>Nguồn "+(i+1)+"</a>").join("")+"</div><div class='hint'>Enka cung cấp trang bị, không cung cấp đầy đủ sheet chỉ số cuối. Benchmark là mốc tham khảo; chưa thể tính % hoàn thành tổng stat.</div></div>";
+ root.innerHTML="<div class='buildcoach'><div class='section-head'><h3>BUILD COACH // "+esc(guide.name)+"</h3><span class='pill'>Guide "+esc(guide.patch)+"</span></div><div class='hint'>Tự đối chiếu build Enka với guide có nguồn; không cần nhập Goal.</div>"+renderCalculatedStats(entry,guide)+"<div class='coach-summary'><div class='coach-chip'><small>DRIVE DISC SET</small><b>"+esc((counts[String(set4)]||0)+"/4 "+name(set4)+" · "+c2(set2)+"/2 "+name(set2))+"</b></div><div class='coach-chip'><small>MAIN STAT 4/5/6</small><b>"+main.filter(x=>x.ok).length+"/3 đúng</b></div><div class='coach-chip'><small>W-ENGINE</small><b>"+esc(wm.name||"Chưa rõ")+"</b><div class='hint'>"+esc(wid===sig?"Đúng signature":"Guide: "+(sm.name||guide.alternatives?.[0]||"chưa rõ"))+"</div></div></div>"+(warnings.length?"<div class='coach-alert'>"+warnings.map(esc).join("<br>")+"</div>":"<div class='coach-alert'>Set và main stat đang khớp guide đã lưu.</div>")+"<div class='section-head'><h3>ĐÁNH GIÁ 6 ĐĨA</h3></div>"+lines+"<div class='section-head'><h3>ENDGAME BENCHMARK</h3></div><div class='coach-targets'>"+(targets||"Chưa có mốc số cụ thể")+"</div><div class='hint'>"+esc(guide.sourceNote||"")+"</div><div class='coach-source'>"+(guide.sources||[]).map((u,i)=>"<a href='"+esc(u)+"' target='_blank' rel='noopener'>Nguồn "+(i+1)+"</a>").join("")+"</div><div class='hint'>Enka cung cấp trang bị, không cung cấp đầy đủ sheet chỉ số cuối. Benchmark là mốc tham khảo; chưa thể tính % hoàn thành tổng stat.</div></div>";
 }
 function renderResourcePlan(){
  const a=data[selected]||{},battery=Math.max(0,Number(a.dailyBattery)||0),minutes=Math.max(0,Number(a.dailyMinutes)||0),days=Math.max(1,Math.min(14,Number(a.planDays)||7));
