@@ -290,18 +290,18 @@ async function fetchEnka(uid){
   timers.forEach(clearTimeout);
  }
 }
-async function syncEnka(){
+async function syncEnka(forceRefresh=false){
  const uid=enkaUidInput.value.trim();
  if(!/^\d{9,10}$/.test(uid)){enkaStatus.textContent="UID không hợp lệ. Hãy nhập UID ZZZ gồm 9–10 chữ số.";return;}
  switchProfile(uid);
  const savedRaw=localStorage.getItem("enkaCache:"+uid);
- if(savedRaw){
+ if(!forceRefresh&&savedRaw){
   try{
    const saved=JSON.parse(savedRaw);
    if(saved.nextAt>Date.now()){
     syncPlannerAgents(saved.data);
     renderEnka(saved.data);
-    enkaStatus.textContent="Đang dùng dữ liệu đã lưu cho UID "+uid+"; Enka cho phép kiểm tra lại sau "+new Date(saved.nextAt).toLocaleTimeString("vi-VN")+".";
+    enkaStatus.textContent="Đang dùng dữ liệu đã lưu · lần đồng bộ mới sau "+new Date(saved.nextAt).toLocaleTimeString("vi-VN")+". Muốn lấy dữ liệu mới ngay, bấm LÀM MỚI.";
     return;
    }
   }catch{}
@@ -320,7 +320,7 @@ async function syncEnka(){
   enkaStatus.textContent="Chưa tải được dữ liệu mới: "+error.message+(cached?" Đang giữ bản gần nhất.":" Kiểm tra UID và quyền hiển thị Showcase trong game.");
  }finally{button.disabled=false;}
 }
-document.getElementById("enkaSync").onclick=syncEnka;
+document.getElementById("enkaSync").onclick=()=>syncEnka(true);
 if(activeUid){
  const cached=showCachedEnka(activeUid);
  if(cached)enkaStatus.textContent="Đang hiển thị Showcase đã lưu cho UID "+activeUid+"; đang kiểm tra cập nhật…";
