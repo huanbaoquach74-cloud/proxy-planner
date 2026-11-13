@@ -1,34 +1,50 @@
 # Proxy Planner — Zenless Zone Zero
 
-A lightweight, mobile-friendly build and farming tracker for Zenless Zone Zero.
+A mobile-friendly ZZZ showcase reader, build checker and farming planner.
 
 ## Use the app
 
-Open the GitHub Pages site:
+Open GitHub Pages: https://huanbaoquach74-cloud.github.io/proxy-planner/
 
-https://huanbaoquach74-cloud.github.io/proxy-planner/
+1. Enter a ZZZ UID and sync the public Enka Showcase.
+2. Select an Agent. Its W-Engine and six Drive Discs appear inside that Agent's dossier.
+3. Build Coach automatically compares the equipped 4-piece/2-piece sets, Disc 4/5/6 main stats, substat lines and W-Engine against the locally bundled sourced guide.
+4. Enter Battery Charge, available minutes and material notes only if you want a personal farming schedule.
+5. Switch UID to use a separate local profile on this device.
 
-1. Enter a ZZZ UID.
-2. Press **Đồng bộ** to load the account's public Enka Showcase.
-3. Select an Agent from the roster to edit ATK, AP, AM, notes, and farming tasks.
-4. Enter another UID to switch profiles. Returning to a UID restores its saved planner data on this browser/device.
+## Automatic build guide coverage
 
-## What it reads
+The initial sourced guide library covers Velina, Phoenix, Pyrois, Jane, Grace, Nicole and Koleda. Recommendations are bundled in `build-guides.json`, with source links and patch/review notes. Unknown Agents are not assigned guessed builds; their dossier reports that a verified guide is not yet bundled.
 
-- Public Agent Showcase data from Enka.Network: Agent level, Mindscape, Core Skill, W-Engine, and equipped Drive Discs.
-- Localized Agent, W-Engine, Drive Disc, and property names from `game-data.json`.
+The checker evaluates:
+- recommended 4-piece and 2-piece Drive Disc set combinations;
+- main-stat families on slots 4, 5 and 6;
+- the presence of guide-priority substats;
+- the equipped W-Engine against the guide's signature recommendation;
+- published endgame stat benchmarks, where the source provides them.
 
-The account owner must make their character details visible in the in-game Showcase. The app never asks for a HoYoverse password, cookie, or login token.
+This is a rule-based checker, not yet a live generative-AI service. It does not invent a stat score or claim that a disc is mathematically optimal. Team composition, mindscape, rotation, W-Engine refinement and stat breakpoints can change recommendations.
 
-## Data and privacy
+## Data limits
 
-- Build stats, notes, checklists, and cached Showcase responses are saved in the browser's local storage.
-- Profiles are separated by UID on the same browser/device.
-- Data is not synced between devices and is not uploaded to a Proxy Planner account.
-- If Enka cannot be reached directly due to browser restrictions, the app attempts public CORS relays. Relay availability is not guaranteed.
+Enka's public ZZZ Showcase provides Agent, W-Engine, skill and Drive Disc equipment data. It does not provide a complete final in-game stat sheet, account inventory, material counts, Battery Charge or free-time availability. Therefore:
+- Current gear and disc recommendations are checked automatically from Enka.
+- Endgame benchmarks are shown as references, not as an automatically calculated current-stat gap.
+- Battery Charge, free time and material notes remain user-entered inputs for the schedule.
+- Farming stages are shown only where the bundled guide source verifies them; otherwise the app says the stage is unverified.
+
+## Privacy
+
+- No HoYoverse password, cookie or login token is requested.
+- UID profiles, notes, checklist state, resource inputs and cached Showcase responses stay in this browser's local storage.
+- Data is not synced between devices or uploaded to a Proxy Planner account.
+- Enka responses are cached according to the API `ttl`; public relay availability is not guaranteed.
+
+## Sources
+
+- Enka.Network ZZZ API documentation: https://github.com/EnkaNetwork/API-docs/blob/master/docs/zzz/api.md
+- Build guide references are linked per Agent inside Build Coach. The bundled recommendations are cross-checked from public sources such as Prydwen, ZZZBuild, Icy Veins, GuildMeta, Kayco and Games.gg.
 
 ## Development notes
 
-This is a static GitHub Pages app. Enka data is fetched on demand and cached according to the API's `ttl` value. The app does not enumerate UIDs or run a server-side UID crawler.
-
-Game metadata is sourced from Enka.Network's parsed ZZZ data. Verify game-specific calculations separately before using the app as a build optimizer.
+The app is hosted as a static GitHub Pages site. No API key is embedded in the frontend. A future generative AI feature would require a secure backend to protect its API key and should be added only after the deterministic build data and calculations are validated.
