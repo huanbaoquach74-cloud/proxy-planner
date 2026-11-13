@@ -339,12 +339,13 @@ function calculateCurrentStats(entry){
  const cr=((raw["20101"]||0)+(raw["20103"]||0))/100;
  const cd=((raw["21101"]||0)+(raw["21103"]||0))/100;
  const penRatio=((raw["23101"]||0)+(raw["23103"]||0))/100;
- const result={atk,ap,am,cr,cd,penRatio,baseAtk,weaponAtk:Math.max(0,(wm.mainStat?.PropertyId===12101?Math.floor(Number(wm.mainStat.PropertyValue||0)*(1+0.1568166666666667*wLevel+0.8922*wBreak)):0)),atkPct:atkPct/100,flatAtk,raw,discs:discs.length,weaponLevel:wLevel};
+ const er=((raw["30501"]||0)/100)*(1+(raw["30502"]||0)/10000)+((raw["30503"]||0)/100);
+ const result={atk,ap,am,cr,cd,penRatio,er,baseAtk,weaponAtk:Math.max(0,(wm.mainStat?.PropertyId===12101?Math.floor(Number(wm.mainStat.PropertyValue||0)*(1+0.1568166666666667*wLevel+0.8922*wBreak)):0)),atkPct:atkPct/100,flatAtk,raw,discs:discs.length,weaponLevel:wLevel};
  return result;
 }
 function renderCalculatedStats(entry,guide){
  const x=calculateCurrentStats(entry);
- const values=[["ATK",x.atk.toLocaleString("en-US"),"ATK"],["AP",x.ap.toLocaleString("en-US"),"AP"],["AM",x.am.toLocaleString("en-US"),"AM"],["CR",x.cr.toFixed(1)+"%","CR"],["CD",x.cd.toFixed(1)+"%","CD"],["PEN Ratio",x.penRatio.toFixed(1)+"%","PEN"]];
+ const values=[["ATK",x.atk.toLocaleString("en-US"),"ATK"],["AP",x.ap.toLocaleString("en-US"),"AP"],["AM",x.am.toLocaleString("en-US"),"AM"],["CR",x.cr.toFixed(1)+"%","CR"],["CD",x.cd.toFixed(1)+"%","CD"],["PEN Ratio",x.penRatio.toFixed(1)+"%","PEN"],["Energy Regen",x.er.toFixed(2),"Energy Regen"]];
  const targetMap=Object.fromEntries((guide.targets||[]).map(t=>[t[0],t[1]]));
  const cards=values.map(v=>"<div class='coach-chip'><small>"+v[0]+"</small><b>"+v[1]+"</b>"+(targetMap[v[2]]?"<div class='hint'>Guide: "+esc(targetMap[v[2]])+"</div>":"")+"</div>").join("");
  return "<div class='section-head' style='margin-top:14px'><h3>CALCULATED BUILD STATS</h3><span class='pill'>Ước tính từ Enka</span></div><div class='coach-summary'>"+cards+"</div><div class='hint'>ATK = Base ATK (Agent + W-Engine) × (1 + ATK%) + flat ATK. AP/AM cộng từ Agent, Core Skill, W-Engine và Drive Disc. Đã dùng công thức scale xấp xỉ công bố của Enka cho W-Engine và main stat đĩa; substat nhân PropertyLevel. Chưa cộng buff set, passive có điều kiện, buff đồng đội hoặc combat state.</div>";
