@@ -53,7 +53,7 @@ button:active,.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #9d4b1e}
 footer{color:#7f8e9a;letter-spacing:.7px;text-transform:uppercase;font-size:9px}
 @media(max-width:700px){header{padding:13px 16px}.intro h1{font-size:21px}.layout{grid-template-columns:1fr}.sidebar{display:flex;overflow:auto;gap:5px}.agent{min-width:112px}.stats{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px;gap:6px}.stat{padding:9px 7px}.stat input{font-size:16px}.hero{padding:15px}}
 
-</style>
+\n/* Agent-scoped Enka dossier */\n.agent-meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 14px}.agent-meta{background:#111923;border:1px solid #465462;padding:10px;min-width:0}.agent-meta b{display:block;color:#f3f0df;font-size:12px;margin-top:5px;overflow-wrap:anywhere}.disc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.disc-card{background:#121a23;border:1px solid #465462;padding:10px;min-width:0}.disc-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;font-size:11px;color:#ffb477}.disc-level{white-space:nowrap;color:#b8f34a}.disc-props{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px;font-size:11px;overflow-wrap:anywhere}.disc-label{font-size:9px;letter-spacing:1px;color:#93a3b0;font-weight:800}.disc-props>div{line-height:1.65}\n@media(max-width:700px){.agent-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-meta:last-child{grid-column:1/-1}.disc-grid{grid-template-columns:1fr}.disc-props{grid-template-columns:1fr 1fr}}\n</style>
 </head>
 <body>
 <header><div><div class="brand">PROXY <span>PLANNER</span></div><div class="sub">NEW ERIDU // INTER-KNOT BUILD TERMINAL</div></div><button class="btn secondary" id="reset">Đặt lại dữ liệu</button></header>
@@ -73,6 +73,7 @@ footer{color:#7f8e9a;letter-spacing:.7px;text-transform:uppercase;font-size:9px}
 </section>
 <section class="panel">
 <div class="hero"><div><h2 id="name">Grace</h2><p id="role">Electric Anomaly</p></div><span class="pill" id="status">Đang xây dựng</span></div>
+<div class="section" id="agentEnkaDetail"><div class="hint">Đồng bộ UID để xem thông tin nhân vật, W-Engine và Drive Disc tại đây.</div></div>
 <div class="stats">
 <div class="stat"><label>ATK</label><input id="atk" inputmode="decimal" placeholder="Nhập ATK"></div>
 <div class="stat"><label>AP</label><input id="ap" inputmode="decimal" placeholder="Nhập AP"></div>
@@ -127,48 +128,54 @@ function syncPlannerAgents(payload){
  saveProfile();
  render();
 }
+let activeShowcasePayload=null;
 function renderEnka(payload){
+ activeShowcasePayload=payload;
  const list=getShowcase(payload);
  const profile=getProfile(payload);
  const uid=payload.uid||payload.UID||profile.Uid||profile.uid||enkaUidInput.value;
  const nickname=profile.Nickname||profile.nickname||"Tài khoản ZZZ";
  const level=profile.Level||profile.level||"?";
- document.getElementById("enkaProfile").innerHTML=`<b>${esc(nickname)}</b> · Inter-Knot ${esc(level)} · UID ${esc(uid||"—")} · ${list.length} Agent showcase`;
- if(!list.length){
-  document.getElementById("enkaAgents").innerHTML='<div class="hint">Không có Agent trong Showcase. Hãy bật hiển thị chi tiết nhân vật và thêm Agent vào Showcase trong game.</div>';
-  return;
- }
- document.getElementById("enkaAgents").innerHTML=list.map(a=>{
-  const id=a.Id??a.id??a.avatarId??"?";
-  const agentMeta=gameData?.agents?.[String(id)]||{};
-  const agentName=agentMeta.name||("Agent "+id);
-  const roleLabels={Anomaly:"Dị thường",Attack:"Tấn công",Stun:"Khống chế",Support:"Hỗ trợ",Defense:"Phòng thủ"};
-  const elementLabels={Physics:"Vật lý",Fire:"Hỏa",Ice:"Băng",Elec:"Điện",Ether:"Ether",Wind:"Phong"};
-  const roleLabel=roleLabels[agentMeta.role]||agentMeta.role||"";
-  const elementLabel=(agentMeta.element||[]).map(x=>elementLabels[x]||x).join(" · ");
-  const level=a.Level??a.level??"?";
-  const mind=a.TalentLevel??a.talentLevel??"?";
-  const core=a.CoreSkillEnhancement??a.coreSkillEnhancement??"?";
-  const skills=a.SkillLevelList||a.skillLevelList||[];
-  const skillLabels={0:"Đánh thường",1:"Chiến kỹ",2:"Né",3:"Tuyệt kỹ",5:"Core",6:"Hỗ trợ"};
-  const skillText=skills.map(x=>(skillLabels[x.Index??x.index]||"Skill")+" "+(x.Level??x.level??"?")).join(" · ");
-  const w=a.Weapon||a.weapon||{};
-  const discs=a.EquippedList||a.equippedList||[];
-  const weaponId=String(w.Id??w.id??"");
-  const weaponName=gameData?.weapons?.[weaponId]?.name;
-  const weaponPhase=w.UpgradeLevel??w.upgradeLevel;
-  const wText=weaponId ? `${esc(weaponName||("W-Engine "+weaponId))} · Lv.${esc(w.Level??w.level??"?")}${weaponPhase?" · M"+esc(weaponPhase):""}` : "Chưa có dữ liệu W-Engine";
-  const discText=discs.map(d=>{
-   const e=d.Equipment||d.equipment||d;
-   const mains=e.MainPropertyList||e.MainStatList||e.mainPropertyList||e.mainStatList||[];
-   const subs=e.RandomPropertyList||e.randomPropertyList||[];
-   const props=[...mains,...subs].map(p=>formatProperty(p)).join(" · ");
-   const discId=String(e.Id??e.id??"");
-   const discMeta=gameData?.discs?.[discId];
-   return `Slot ${esc(d.Slot??d.slot??"?")}: ${esc(discMeta?.suitName||("Drive Disc "+discId))} · Lv.${esc(e.Level??e.level??"?")}${props?" — "+esc(props):""}`;
-  }).join("<br>");
-  return `<div class="stat"><b>${esc(agentName)}</b><div class="hint">${esc(roleLabel)}${elementLabel?" · "+esc(elementLabel):""} · Lv. ${esc(level)} · Mindscape ${esc(mind)} · Core ${esc(core)}</div><div class="hint">${wText}</div><div class="hint">${skillText?"Kỹ năng: "+esc(skillText):""}</div><div class="hint">${discText||"Chưa có Drive Disc trong dữ liệu showcase"}</div></div>`;
+ document.getElementById("enkaProfile").innerHTML=`<b>${esc(nickname)}</b> · Inter-Knot ${esc(level)} · UID ${esc(uid||"—")} · ${list.length} Agent trong Showcase`;
+ document.getElementById("enkaAgents").innerHTML='<div class="hint">Thông tin chi tiết được hiển thị trong hồ sơ Agent đang chọn bên dưới.</div>';
+ renderAgentEnkaDetail();
+}
+function renderAgentEnkaDetail(){
+ const root=document.getElementById("agentEnkaDetail");
+ if(!root)return;
+ const list=activeShowcasePayload?getShowcase(activeShowcasePayload):[];
+ if(!list.length){root.innerHTML='<div class="hint">Chưa có dữ liệu Enka cho Agent này. Hãy đồng bộ UID có Showcase công khai.</div>';return;}
+ const entry=list.find(a=>{
+  const id=String(a.Id??a.id??a.avatarId??"");
+  return (gameData?.agents?.[id]?.name||("Agent "+id))===selected;
+ });
+ if(!entry){root.innerHTML='<div class="hint">Agent này chưa nằm trong Showcase của UID đang chọn.</div>';return;}
+ const id=String(entry.Id??entry.id??entry.avatarId??"");
+ const level=entry.Level??entry.level??"?";
+ const mind=entry.TalentLevel??entry.talentLevel??"?";
+ const core=entry.CoreSkillEnhancement??entry.coreSkillEnhancement??"?";
+ const skills=entry.SkillLevelList||entry.skillLevelList||[];
+ const skillLabels={0:"Đánh thường",1:"Chiến kỹ",2:"Né",3:"Tuyệt kỹ",5:"Core",6:"Hỗ trợ"};
+ const skillText=skills.map(x=>(skillLabels[x.Index??x.index]||"Skill")+" Lv."+ (x.Level??x.level??"?")).join(" · ");
+ const w=entry.Weapon||entry.weapon||{};
+ const weaponId=String(w.Id??w.id??"");
+ const weaponMeta=gameData?.weapons?.[weaponId]||{};
+ const weaponName=weaponMeta.name||(weaponId?"W-Engine "+weaponId:"Chưa có dữ liệu");
+ const weaponPhase=w.UpgradeLevel??w.upgradeLevel;
+ const weaponLine=weaponId?`${esc(weaponName)} · Lv.${esc(w.Level??w.level??"?")}${weaponPhase?" · Tinh luyện "+esc(weaponPhase):""}`:"Chưa có dữ liệu W-Engine";
+ const discs=(entry.EquippedList||entry.equippedList||[]).slice().sort((a,b)=>Number(a.Slot??a.slot??0)-Number(b.Slot??b.slot??0));
+ const discCards=discs.map(d=>{
+  const e=d.Equipment||d.equipment||d;
+  const slot=d.Slot??d.slot??"?";
+  const discId=String(e.Id??e.id??"");
+  const meta=gameData?.discs?.[discId]||{};
+  const mains=e.MainPropertyList||e.MainStatList||e.mainPropertyList||e.mainStatList||[];
+  const subs=e.RandomPropertyList||e.randomPropertyList||[];
+  const propLines=(arr)=>arr.map(p=>formatProperty(p)).filter(Boolean);
+  const mainLines=propLines(mains),subLines=propLines(subs);
+  return `<div class="disc-card"><div class="disc-top"><b>SLOT ${esc(slot)} · ${esc(meta.suitName||("Drive Disc "+discId))}</b><span class="disc-level">Lv.${esc(e.Level??e.level??"?")}</span></div><div class="disc-props"><div><span class="disc-label">MAIN STAT</span><br>${mainLines.length?mainLines.map(esc).join("<br>"):"—"}</div><div><span class="disc-label">SUBSTATS</span><br>${subLines.length?subLines.map(esc).join("<br>"):"—"}</div></div></div>`;
  }).join("");
+ root.innerHTML=`<div class="section-head"><h3>HỒ SƠ ENKA // ${esc(selected)}</h3><span class="pill">Lv. ${esc(level)}</span></div><div class="agent-meta-grid"><div class="agent-meta"><span class="disc-label">MINDscape</span><b>${esc(mind)}</b></div><div class="agent-meta"><span class="disc-label">CORE SKILL</span><b>${esc(core)}</b></div><div class="agent-meta"><span class="disc-label">W-ENGINE</span><b>${weaponLine}</b></div></div>${skillText?`<div class="hint" style="margin:10px 0 14px">KỸ NĂNG · ${esc(skillText)}</div>`:""}<div class="section-head" style="margin-top:14px"><h3>DRIVE DISC // 6 SLOTS</h3><span class="hint">${discs.length}/6</span></div><div class="disc-grid">${discCards||'<div class="hint">Showcase chưa có Drive Disc.</div>'}</div>`;
 }
 function setEnkaLink(uid){return `https://enka.network/api/zzz/uid/${uid}/`;}
 function showCachedEnka(uid){
