@@ -25,12 +25,40 @@ button,.btn{border:0;border-radius:10px;padding:10px 13px;background:var(--accen
 .note{width:100%;min-height:72px;border:1px solid var(--line);border-radius:11px;padding:11px;font:inherit;resize:vertical}
 footer{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
 @media(max-width:700px){header{padding:13px 16px}main{margin:18px auto}.intro{align-items:flex-start;flex-direction:column}.layout{grid-template-columns:1fr}.sidebar{display:flex;overflow:auto;gap:5px;padding:8px}.side-title{display:none}.agent{min-width:118px;flex-direction:column;align-items:flex-start;gap:5px;margin:0}.avatar{width:34px;height:34px}.hero{padding:16px}.stats{padding:0 12px 12px;gap:7px}.stat{padding:9px}.stat input{font-size:17px}}
+
+/* New Eridu / retro terminal visual layer */
+:root{--bg:#10151d;--card:#1b2430;--ink:#f3f0df;--muted:#a3adbb;--line:#394654;--accent:#ff8b35;--soft:#3b2c28;--green:#b8f34a;--shadow:0 10px 0 #080c11,0 16px 32px #0008}
+*{box-sizing:border-box}
+body{background-color:#10151d;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px),radial-gradient(ellipse at 12% 0%,#ff8b351e,transparent 38%),radial-gradient(ellipse at 90% 15%,#54d9e51a,transparent 35%);background-size:24px 24px,24px 24px,auto,auto;color:var(--ink);font-family:"Courier New",ui-monospace,monospace;letter-spacing:.1px}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:10;background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,#00000012 4px);opacity:.22}
+header{background:#151d27ed;border-bottom:2px solid var(--accent);box-shadow:0 5px 0 #090d12;padding:15px max(18px,calc((100% - 1050px)/2))}
+.brand{font-family:system-ui,sans-serif;font-weight:1000;letter-spacing:1.5px;font-size:21px;color:#f4f0df;text-shadow:2px 2px 0 #ff8b35}.brand span{color:#b8f34a;text-shadow:2px 2px 0 #31531a}.sub{font-family:inherit;color:#9eacb9;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+main{max-width:1100px;margin:26px auto;padding:0 16px 50px}
+.intro{align-items:center;border-left:5px solid var(--green);padding:8px 0 8px 16px;margin-bottom:22px}.intro h1{font-family:system-ui,sans-serif;text-transform:uppercase;letter-spacing:-.7px;color:#fff;font-size:26px;text-shadow:2px 2px 0 #ff8b35}.intro p{font-size:12px;letter-spacing:.3px}
+.layout{gap:16px}.panel,.card{background:linear-gradient(145deg,#202c39,#18212c);border:1px solid #465565;border-radius:5px;box-shadow:var(--shadow);position:relative}
+.panel:before{content:"";position:absolute;top:-1px;left:-1px;width:34px;height:4px;background:var(--green)}
+.sidebar{background:#151e29;padding:12px}.side-title{color:var(--green);font-size:10px;letter-spacing:2px}
+.agent{border:1px solid transparent;border-radius:3px;color:#e7e4d8;font-family:inherit}.agent.active{background:#342b27;color:#ffad69;border-color:#ff8b35;box-shadow:inset 3px 0 #ff8b35}.avatar{background:#2a3946;color:var(--green);border:1px solid #526575;border-radius:3px}
+.hero{padding:20px;background:linear-gradient(100deg,#252d38,#1a2531);border-bottom:1px solid #4b5b68}.hero h2{font-family:system-ui,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:#fff}.hero p{font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.pill{background:#3b2b22;color:#ffb477;border:1px solid #a85b2d;border-radius:3px;font-size:10px;letter-spacing:1px;text-transform:uppercase}
+.section{padding:18px}.section h3{font-family:system-ui,sans-serif;text-transform:uppercase;letter-spacing:.6px;color:#fff}.hint{color:#a7b2bd;font-size:11px}
+.stats{gap:10px;padding:14px 16px 16px}.stat{background:#121a23;border:1px solid #465462;border-radius:4px;position:relative}.stat:after{content:"";position:absolute;right:7px;top:7px;width:6px;height:6px;background:var(--green);box-shadow:0 0 8px #b8f34a}
+.stat label{color:#aab7c3;font-size:10px;letter-spacing:1.5px;text-transform:uppercase}.stat input{color:#b8f34a;font-family:inherit}
+.progress{background:#0c1219;border:1px solid #465462;border-radius:2px;height:10px}.bar{background:repeating-linear-gradient(90deg,#b8f34a 0,#b8f34a 8px,#729a2d 8px,#729a2d 11px);box-shadow:0 0 9px #b8f34a55}
+.task{border-top:1px dashed #465462}.task input{accent-color:#b8f34a}.tag{background:#303c48;color:#d9e1e8;border-radius:2px;letter-spacing:.6px}
+button,.btn{background:#ff8b35;color:#1b1b18;border:1px solid #ffc17e;border-radius:3px;font-family:inherit;font-weight:900;letter-spacing:.4px;text-transform:uppercase;box-shadow:0 3px 0 #9d4b1e;transition:transform .12s,box-shadow .12s}
+button:active,.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #9d4b1e}
+.btn.secondary{background:#273542;color:#dce5e8;border:1px solid #596b78;box-shadow:0 3px 0 #101820}
+.addrow input,.note{background:#111923;color:#f3f0df;border:1px solid #52616d;border-radius:3px;font-family:inherit}.addrow input::placeholder,.note::placeholder{color:#788896}
+footer{color:#7f8e9a;letter-spacing:.7px;text-transform:uppercase;font-size:9px}
+@media(max-width:700px){header{padding:13px 16px}.intro h1{font-size:21px}.layout{grid-template-columns:1fr}.sidebar{display:flex;overflow:auto;gap:5px}.agent{min-width:112px}.stats{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px;gap:6px}.stat{padding:9px 7px}.stat input{font-size:16px}.hero{padding:15px}}
+
 </style>
 </head>
 <body>
-<header><div><div class="brand">PROXY <span>PLANNER</span></div><div class="sub">Zenless Zone Zero · Build & farm tracker</div></div><button class="btn secondary" id="reset">Đặt lại dữ liệu</button></header>
+<header><div><div class="brand">PROXY <span>PLANNER</span></div><div class="sub">NEW ERIDU // INTER-KNOT BUILD TERMINAL</div></div><button class="btn secondary" id="reset">Đặt lại dữ liệu</button></header>
 <main>
-<div class="intro"><div><h1>Kế hoạch phát triển Agent</h1><p>Chọn nhân vật, cập nhật chỉ số và theo dõi thứ tự farm.</p></div><span class="pill">Lưu tự động trên thiết bị</span></div>
+<div class="intro"><div><h1>Inter-Knot // Agent dossier</h1><p>BUILD DATABASE · DRIVE DISC TRACKER · PROXY RECORDS</p></div><span class="pill">Lưu tự động trên thiết bị</span></div>
 <div class="layout">
 <aside class="panel sidebar"><div class="side-title">DANH SÁCH AGENT</div><div id="agents"></div></aside>
 <div class="content">
