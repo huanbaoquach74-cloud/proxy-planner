@@ -64,7 +64,7 @@ let profiles=JSON.parse(localStorage.getItem(PROFILE_KEY)||"{}");
 let activeUid=localStorage.getItem("activeUid")||localStorage.getItem("enkaUid")||"";
 const legacyData=JSON.parse(localStorage.getItem("proxyPlanner")||"null");
 let data=profiles[activeUid]||legacyData||structuredClone(defaults);
-let selected=localStorage.getItem("selectedAgent:"+activeUid)||localStorage.getItem("selectedAgent")||Object.keys(data)[0]||"Agent mới";
+let selected=localStorage.getItem("selectedAgent:"+(activeUid||"local"))||localStorage.getItem("selectedAgent")||Object.keys(data)[0]||"Agent mới";
 if(!data[selected])selected=Object.keys(data)[0]||"Agent mới";
 const enkaUidInput=document.getElementById("enkaUid");
 const enkaStatus=document.getElementById("enkaStatus");
@@ -254,7 +254,7 @@ function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(
 function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes"].forEach(k=>document.getElementById(k).value=a[k]||"");document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${esc(t.text||t)}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
 ["atk","ap","am","notes"].forEach(k=>document.getElementById(k).addEventListener("input",e=>{data[selected][k]=e.target.value;save()}));
 document.getElementById("add").onclick=()=>{let v=document.getElementById("newtask").value.trim();if(v){data[selected].tasks.push({text:v,done:false});document.getElementById("newtask").value="";save();render()}};
-document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại dữ liệu build và checklist của UID hiện tại?")){data=structuredClone(defaults);selected="Agent mới";save();render();document.getElementById("enkaAgents").innerHTML="";document.getElementById("enkaProfile").textContent="";}};
+document.getElementById("reset").onclick=()=>{if(confirm("Xóa chỉ số, ghi chú và trạng thái checklist của UID hiện tại?")){const entries=Object.entries(data).map(([name,a])=>[name,{...a,atk:"",ap:"",am:"",notes:"",tasks:(a.tasks||[]).map(t=>typeof t==="string"?{text:t,done:false}:{...t,done:false})}]);data=entries.length?Object.fromEntries(entries):structuredClone(defaults);selected=data[selected]?selected:(Object.keys(data)[0]||"Agent mới");save();render();}};
 loadGameData();
 render();
 </script>
