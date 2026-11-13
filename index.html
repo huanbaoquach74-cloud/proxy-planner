@@ -258,10 +258,12 @@ function switchProfile(uid){
  render();
 }
 async function fetchEnka(uid){
- const url=setEnkaLink(uid);
+ // Bust both the browser cache and intermediary proxy/CDN caches on every manual refresh.
+ const cacheBust=Date.now();
+ const url=setEnkaLink(uid)+"?_"+cacheBust;
  const attempts=[
   {label:"Enka",url},
-  {label:"AllOrigins",url:"https://api.allorigins.win/raw?url="+encodeURIComponent(url)},
+  {label:"AllOrigins",url:"https://api.allorigins.win/raw?url="+encodeURIComponent(url)+"&_="+cacheBust},
   {label:"CORS fallback",url:"https://proxy.cors.dev/"+url}
  ];
  const controllers=attempts.map(()=>new AbortController());
