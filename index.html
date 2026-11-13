@@ -38,7 +38,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
  <div class="section-head"><h3>Kết nối tài khoản Enka</h3><span class="pill">ZZZ Showcase</span></div>
  <div class="hint" style="margin-bottom:10px">Nhập UID ZZZ của bất kỳ người chơi nào để tải Showcase công khai. Mỗi UID có dữ liệu build và ghi chú riêng trên thiết bị này; không cần mật khẩu HoYoverse. Nếu trình duyệt chặn Enka, app thử kết nối qua relay công khai; chỉ gửi UID và dữ liệu Showcase công khai, không gửi thông tin đăng nhập.</div>
  <div class="addrow" style="margin-top:0"><input id="enkaUid" inputmode="numeric" placeholder="UID ZZZ" value=""><button id="enkaSync">Đồng bộ</button></div>
- <div id="enkaStatus" class="hint" style="margin-top:9px" role="status">Đang chờ cấu hình đồng bộ nền lần đầu.</div>
+ <div id="enkaStatus" class="hint" style="margin-top:9px" role="status">Nhập UID ZZZ rồi bấm Đồng bộ để tải Showcase công khai.</div>
  <div id="enkaProfile" style="margin-top:12px"></div>
  <div id="enkaAgents" style="display:grid;gap:9px;margin-top:10px"></div>
  
@@ -64,7 +64,7 @@ let profiles=JSON.parse(localStorage.getItem(PROFILE_KEY)||"{}");
 let activeUid=localStorage.getItem("activeUid")||localStorage.getItem("enkaUid")||"";
 const legacyData=JSON.parse(localStorage.getItem("proxyPlanner")||"null");
 let data=profiles[activeUid]||legacyData||structuredClone(defaults);
-let selected=localStorage.getItem("selectedAgent")||Object.keys(data)[0]||"Agent mới";
+let selected=localStorage.getItem("selectedAgent:"+activeUid)||localStorage.getItem("selectedAgent")||Object.keys(data)[0]||"Agent mới";
 if(!data[selected])selected=Object.keys(data)[0]||"Agent mới";
 const enkaUidInput=document.getElementById("enkaUid");
 const enkaStatus=document.getElementById("enkaStatus");
@@ -93,9 +93,6 @@ function syncPlannerAgents(payload){
   const role=(roleLabels[meta.role]||meta.role||"Agent")+" · "+((meta.element||[]).join("/"));
   next[name]=data[name]||data["Agent "+id]||{role,atk:"",ap:"",am:"",notes:"",tasks:["Kiểm tra W-Engine","Kiểm tra bộ 6 Drive Disc","Chốt main stat","Đánh giá substat","Xác định mục tiêu chỉ số"]};
   next[name].role=role;
- }
- for(const [name,profile] of Object.entries(data)){
-  if(name!=="Agent mới"&&!/^Agent \d+$/.test(name)&&!next[name])next[name]=profile;
  }
  data=Object.keys(next).length?next:structuredClone(defaults);
  if(!data[selected])selected=Object.keys(data)[0];
@@ -176,6 +173,7 @@ function saveProfile(){
  profiles[activeUid||"local"]=data;
  localStorage.setItem(PROFILE_KEY,JSON.stringify(profiles));
  localStorage.setItem("proxyPlanner",JSON.stringify(data));
+ localStorage.setItem("selectedAgent:"+ (activeUid||"local"),selected);
  localStorage.setItem("selectedAgent",selected);
  localStorage.setItem("activeUid",activeUid);
  localStorage.setItem("enkaUid",activeUid);
@@ -187,7 +185,8 @@ function switchProfile(uid){
  activeUid=uid;
  const firstUidMigration=!previousUid&&profiles.local;
  data=profiles[uid]||(firstUidMigration?structuredClone(profiles.local):structuredClone(defaults));
- selected=Object.keys(data).includes(selected)?selected:Object.keys(data)[0]||"Agent mới";
+ selected=localStorage.getItem("selectedAgent:"+uid)||Object.keys(data)[0]||"Agent mới";
+ if(!data[selected])selected=Object.keys(data)[0]||"Agent mới";
  saveProfile();
  render();
 }
@@ -222,6 +221,7 @@ async function syncEnka(){
   try{
    const saved=JSON.parse(savedRaw);
    if(saved.nextAt>Date.now()){
+    syncPlannerAgents(saved.data);
     renderEnka(saved.data);
     enkaStatus.textContent="Đang dùng dữ liệu đã lưu cho UID "+uid+"; Enka cho phép kiểm tra lại sau "+new Date(saved.nextAt).toLocaleTimeString("vi-VN")+".";
     return;
@@ -250,11 +250,11 @@ if(activeUid){
 }
 setInterval(()=>{if(activeUid)syncEnka();},30*60*1000);
 function save(){saveProfile()}
-function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(data).map(n=>`<button class="agent ${n===selected?"active":""}" data-agent="${n}"><span class="avatar">${n.slice(0,2).toUpperCase()}</span><span><b>${n}</b><small>${data[n].role}</small></span></button>`).join("");document.querySelectorAll("[data-agent]").forEach(b=>b.onclick=()=>{selected=b.dataset.agent;save();render()})}
-function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes"].forEach(k=>document.getElementById(k).value=a[k]||"");document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${t.text||t}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
+function renderAgents(){document.getElementById("agents").innerHTML=Object.keys(data).map(n=>`<button class="agent ${n===selected?"active":""}" data-agent="${esc(n)}"><span class="avatar">${esc(n.slice(0,2).toUpperCase())}</span><span><b>${esc(n)}</b><small>${esc(data[n].role)}</small></span></button>`).join("");document.querySelectorAll("[data-agent]").forEach(b=>b.onclick=()=>{selected=b.dataset.agent;save();render()})}
+function render(){renderAgents();let a=data[selected];document.getElementById("name").textContent=selected;document.getElementById("role").textContent=a.role;["atk","ap","am","notes"].forEach(k=>document.getElementById(k).value=a[k]||"");document.getElementById("tasks").innerHTML=a.tasks.map((t,i)=>`<label class="task ${t.done?"done":""}"><input type="checkbox" data-task="${i}" ${t.done?"checked":""}><span>${esc(t.text||t)}</span><small class="tag">${i<2?"ƯU TIÊN":"KẾ HOẠCH"}</small></label>`).join("");document.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{let t=a.tasks[+c.dataset.task];if(typeof t==="string")a.tasks[+c.dataset.task]={text:t,done:c.checked};else t.done=c.checked;save();render()});let done=a.tasks.filter(t=>typeof t==="object"&&t.done).length;document.getElementById("count").textContent=`${done}/${a.tasks.length}`;document.getElementById("bar").style.width=(a.tasks.length?done/a.tasks.length*100:0)+"%"}
 ["atk","ap","am","notes"].forEach(k=>document.getElementById(k).addEventListener("input",e=>{data[selected][k]=e.target.value;save()}));
 document.getElementById("add").onclick=()=>{let v=document.getElementById("newtask").value.trim();if(v){data[selected].tasks.push({text:v,done:false});document.getElementById("newtask").value="";save();render()}};
-document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại dữ liệu của hồ sơ hiện tại?")){data=structuredClone(defaults);selected="Agent mới";save();render()}};
+document.getElementById("reset").onclick=()=>{if(confirm("Đặt lại dữ liệu build và checklist của UID hiện tại?")){data=structuredClone(defaults);selected="Agent mới";save();render();document.getElementById("enkaAgents").innerHTML="";document.getElementById("enkaProfile").textContent="";}};
 loadGameData();
 render();
 </script>
