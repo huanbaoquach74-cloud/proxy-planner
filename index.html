@@ -59,6 +59,21 @@ footer{color:#7f8e9a;letter-spacing:.7px;text-transform:uppercase;font-size:9px}
 
 /* Automatic build coach */
 .buildcoach{margin-top:12px;border-top:1px solid #465462;padding-top:14px}.coach-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}.coach-chip{background:#111923;border:1px solid #465462;padding:9px;min-width:0}.coach-chip b{display:block;color:#b8f34a;font-size:13px;margin-top:4px}.coach-chip small{color:#93a3b0;font-size:9px;letter-spacing:1px}.coach-disc{display:grid;grid-template-columns:42px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px dashed #465462;font-size:11px}.coach-disc:last-child{border:0}.coach-status{font-size:9px;color:#b8f34a;letter-spacing:.5px;text-align:right}.coach-source{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.coach-source a{color:#ffb477;font-size:10px}.coach-targets{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}.coach-target{border:1px solid #465462;background:#111923;padding:6px 8px;font-size:10px}.coach-target b{color:#b8f34a}.coach-alert{border-left:3px solid #ff8b35;padding:8px 10px;background:#30251f;margin:9px 0;font-size:11px}.resource-plan{margin-top:10px;padding:12px;background:#111923;border:1px solid #465462}@media(max-width:700px){.coach-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.coach-disc{grid-template-columns:36px 1fr auto}}
+
+/* Readable UI typography: keep the retro palette, drop the typewriter font */
+body{font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif;letter-spacing:0}
+button,.btn,.addrow input,.note,.coach-field input{font-family:inherit}
+.brand,.intro h1,.hero h2,.section h3{font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif}
+.disc-review{background:#111923;border:1px solid #465462;padding:11px;margin:8px 0;border-left:3px solid #52616d}
+.disc-review-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px}
+.disc-review-meta{color:#93a3b0;font-size:10px;margin:5px 0 8px}
+.disc-review-main{font-size:11px;color:#f3f0df;margin-bottom:7px}
+.disc-sub-list{display:flex;flex-wrap:wrap;gap:6px}
+.disc-sub{background:#293541;border:1px solid #465462;padding:5px 7px;font-size:10px;border-radius:3px}
+.disc-sub.is-priority{border-color:#8ba83d;color:#d8f69a;background:#26331f}
+.disc-sub b{font-size:8px;letter-spacing:.4px;color:#b8f34a}
+.disc-review-action{font-size:10px;color:#c3cbd1;margin-top:8px;padding-top:7px;border-top:1px dashed #465462}
+.coach-status.good{color:#b8f34a}.coach-status.warn{color:#ffcf68}.coach-status.bad{color:#ff8b72}
 </style>
 </head>
 <body>
@@ -355,35 +370,65 @@ function renderBuildCoach(entry){
  if(!entry){root.innerHTML="<div class='hint'>Đồng bộ Showcase để web tự phân tích build.</div>";return;}
  const id=String(entry.Id??entry.id??entry.avatarId??""),guide=buildGuides?.agents?.[id];
  if(!guide){root.innerHTML="<div class='buildcoach'><div class='section-head'><h3>BUILD COACH // "+esc(selected)+"</h3><span class='pill'>Chưa có guide</span></div><div class='hint'>Chưa có build guide đã xác minh trong thư viện. Web không tự đoán set hoặc ngưỡng chỉ số.</div></div>";return;}
- const discs=(entry.EquippedList||entry.equippedList||[]).map(d=>({slot:Number(d.Slot??d.slot??0),e:d.Equipment||d.equipment||d}));
- const counts={};discs.forEach(d=>{const m=gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{};const k=String(m.suitId||0);counts[k]=(counts[k]||0)+1;});
+ const discs=(entry.EquippedList||entry.equippedList||[]).map(d=>({slot:Number(d.Slot??d.slot??0),e:d.Equipment||d.equipment||d})).sort((a,b)=>a.slot-b.slot);
+ const discMeta=d=>gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{};
+ const counts={};discs.forEach(d=>{const k=String(discMeta(d).suitId||0);counts[k]=(counts[k]||0)+1;});
  const best4=guide.best4||[],best2=guide.best2||[];
- const set4=best4.slice().sort((a,b)=>(counts[b]||0)-(counts[a]||0))[0];
- let usedFour=0;const remaining=discs.filter(d=>{const sid=String((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId);if(sid===String(set4)&&usedFour<4){usedFour++;return false;}return true;});
- const c2=id=>remaining.filter(d=>Number((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId)===Number(id)).length;
- const set2=best2.slice().sort((a,b)=>c2(b)-c2(a))[0];
- const name=id=>Object.values(gameData?.discs||{}).find(x=>Number(x.suitId)===Number(id))?.suitName||("Set "+id);
- const main=discs.filter(d=>d.slot>=4&&d.slot<=6).map(d=>{const p=(d.e.MainPropertyList||d.e.MainStatList||[])[0];return {slot:d.slot,ok:!!p&&(guide.mainStats?.[String(d.slot)]||[]).includes(statFamily(p))};});
- const lines=discs.map(d=>{
-  const e=d.e,m=gameData?.discs?.[String(e.Id??e.id??"")]||{};
-  const p=(e.MainPropertyList||e.MainStatList||[])[0],ok=d.slot<4||!!p&&(guide.mainStats?.[String(d.slot)]||[]).includes(statFamily(p));
-  const sub=e.RandomPropertyList||[];
-  const keys=sub.map(x=>{const n=Number(x.PropertyId);if(Math.floor(n/100)===312)return "AP";if(n===12102)return "ATK%";if(Math.floor(n/100)===231)return "PEN%";if(Math.floor(n/100)===201)return "CR";if(Math.floor(n/100)===211)return "CD";if(n===12103)return "ATK";return "";}).filter(x=>x&&guide.subPriority.includes(x));
-  const level=Number(e.Level||0),status=!ok?"MAIN SAI":level<15?"CẦN NÂNG":keys.length?"GIỮ":"XEM SUBSTAT";
-  const mainName=p?propertyLabel(p.PropertyId):"Main stat chưa rõ";
-  return "<div class='coach-disc'><b>S"+d.slot+"</b><div><b>"+esc(m.suitName||"Drive Disc")+"</b><div class='hint'>"+esc(mainName)+" · "+keys.length+" dòng substat ưu tiên · Lv."+level+"</div></div><span class='coach-status'>"+status+"</span></div>";
- }).join("");
+ const set4=best4.slice().sort((a,b)=>(counts[String(b)]||0)-(counts[String(a)]||0))[0]??best4[0];
+ let usedFour=0;
+ const remaining=discs.filter(d=>{const sid=String(discMeta(d).suitId||0);if(sid===String(set4)&&usedFour<4){usedFour++;return false;}return true;});
+ const c2=sid=>remaining.filter(d=>Number(discMeta(d).suitId)===Number(sid)).length;
+ const set2=best2.slice().sort((a,b)=>c2(b)-c2(a))[0]??best2[0];
+ const setName=id=>Object.values(gameData?.discs||{}).find(x=>Number(x.suitId)===Number(id))?.suitName||("Set "+id);
+ const allowedMain=slot=>guide.mainStats?.[String(slot)]||[];
+ const main=discs.filter(d=>d.slot>=4&&d.slot<=6).map(d=>{const p=(d.e.MainPropertyList||d.e.MainStatList||[])[0];return {slot:d.slot,ok:!!p&&allowedMain(d.slot).includes(statFamily(p)),p};});
+ const wrong=main.filter(x=>!x.ok);
+ const statKey=p=>{
+  const n=Number(p?.PropertyId??p?.propertyId??0),family=Math.floor(n/100);
+  if(n===31201||n===31203||family===312)return "AP";
+  if(n===12102)return "ATK%";if(n===12103||n===12101)return "ATK";
+  if(family===231)return "PEN%";if(family===201)return "CR";if(family===211)return "CD";
+  if(family===314)return "AM";if(family===305)return "ER";
+  if(family===122)return "Impact";
+  return "";
+ };
  const familyLabel=f=>({121:"ATK%",122:"Impact",123:"PEN",201:"CRIT Rate",211:"CRIT DMG",231:"PEN Ratio",305:"Energy Regen",312:"Anomaly Proficiency",314:"Anomaly Mastery",315:"Physical DMG",316:"Fire DMG",317:"Ice DMG",318:"Electric DMG",319:"Ether DMG",323:"Fire DMG"}[Number(f)]||propertyLabel(Number(f)*100)||("Stat "+f));
+ const mainLabel=p=>p?propertyLabel(p.PropertyId??p.propertyId):"Chưa đọc được";
+ const valueText=p=>formatProperty(p);
+ const priorities=guide.subPriority||[];
+ const scoreDisc=d=>{
+  const subs=d.e.RandomPropertyList||d.e.randomPropertyList||[];
+  const ranked=subs.map(p=>({p,key:statKey(p)}));
+  const good=ranked.filter(x=>x.key&&priorities.includes(x.key));
+  return {subs:ranked,good,score:good.length};
+ };
+ const set4Count=Number(counts[String(set4)]||0),set2Count=c2(set2);
+ const actionFor=d=>{
+  const meta=discMeta(d),sid=String(meta.suitId||0),mainProp=(d.e.MainPropertyList||d.e.MainStatList||[])[0];
+  const mainWrong=d.slot>=4&&d.slot<=6&&(!mainProp||!allowedMain(d.slot).includes(statFamily(mainProp)));
+  const q=scoreDisc(d),inPreferredSet=sid===String(set4)||Number(sid)===Number(set2);
+  if(mainWrong)return {label:"THAY MAIN",detail:"Main stat không khớp guide. S"+d.slot+" cần "+allowedMain(d.slot).map(familyLabel).join(" / ")+".",tone:"bad"};
+  if(q.score>=2&&inPreferredSet)return {label:"GIỮ",detail:"Có "+q.score+" dòng substat thuộc nhóm ưu tiên; đang nằm trong set được khuyến nghị.",tone:"good"};
+  if(q.score>=2)return {label:"GIỮ TẠM",detail:"Substat tốt ("+q.score+" dòng ưu tiên), nhưng chưa góp vào set 4/2 đang được chọn. Đừng vứt nếu chưa có món thay.",tone:"good"};
+  if(q.score===1)return {label:"CÂN NHẮC",detail:"Chỉ có 1 dòng substat ưu tiên. Giữ tạm và thay khi kiếm được món có main/set phù hợp cùng nhiều substat tốt hơn.",tone:"warn"};
+  return {label:"ỨNG VIÊN THAY",detail:"Chưa thấy dòng substat thuộc nhóm ưu tiên của guide. Đây là ứng viên thay trước, không phải kết luận chắc chắn nếu đang cần giữ set.",tone:"bad"};
+ };
+ const lines=discs.map(d=>{
+  const e=d.e,m=discMeta(d),p=(e.MainPropertyList||e.MainStatList||[])[0],q=scoreDisc(d),action=actionFor(d);
+  const subs=q.subs.map(x=>"<span class='disc-sub "+(x.key&&priorities.includes(x.key)?"is-priority":"") +"'>"+esc(valueText(x.p))+(x.key&&priorities.includes(x.key)?" <b>ƯU TIÊN</b>":"")+"</span>").join("");
+  const level=Number(e.Level||0),sid=String(m.suitId||0),setStatus=sid===String(set4)?"Set 4 ưu tiên":Number(sid)===Number(set2)?"Set 2 ưu tiên":"Ngoài set ưu tiên";
+  return "<div class='disc-review'><div class='disc-review-head'><b>SLOT "+d.slot+" · "+esc(m.suitName||"Drive Disc")+"</b><span class='coach-status "+action.tone+"'>"+action.label+"</span></div><div class='disc-review-meta'>Lv."+level+" · "+setStatus+" · "+q.score+"/"+q.subs.length+" dòng sub ưu tiên</div><div class='disc-review-main'><b>Main:</b> "+esc(valueText(p))+"</div><div class='disc-sub-list'>"+(subs||"<span class='hint'>Không đọc được substat</span>")+"</div><div class='disc-review-action'>"+action.detail+"</div></div>";
+ }).join("");
  const fixActions=[];
- if(Number(counts[String(set4)]||0)<4){const candidates=discs.filter(d=>String((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId)!==String(set4));fixActions.push("<b>Set 4 món:</b> hiện có "+(counts[String(set4)]||0)+"/4 "+esc(name(set4))+". Cần thay "+(4-(counts[String(set4)]||0))+" đĩa ngoài set; các slot đang ngoài set: "+(candidates.map(d=>"S"+d.slot).join(", ")||"chưa xác định")+". Ưu tiên thay đĩa có main sai hoặc substat kém trước.");}
- if(c2(set2)<2){const candidates=remaining.filter(d=>Number((gameData?.discs?.[String(d.e.Id??d.e.id??"")]||{}).suitId)!==Number(set2));fixActions.push("<b>Set 2 món:</b> hiện có "+c2(set2)+"/2 "+esc(name(set2))+". Cần thêm "+(2-c2(set2))+" món; cân nhắc các slot còn lại sau khi chốt set 4 món.");}
- wrong.forEach(x=>{const d=discs.find(y=>y.slot===x.slot),p=d?((d.e.MainPropertyList||d.e.MainStatList||[])[0]):null,allowed=guide.mainStats?.[String(x.slot)]||[];fixActions.push("<b>Slot "+x.slot+" main stat:</b> hiện tại "+esc(p?propertyLabel(p.PropertyId):"không đọc được")+". Đổi sang một trong các main stat guide cho phép: "+allowed.map(familyLabel).map(esc).join(" / ")+".");});
- discs.forEach(d=>{const e=d.e,m=gameData?.discs?.[String(e.Id??e.id??"")]||{},sid=String(m.suitId||0),in4=sid===String(set4),in2=Number(sid)===Number(set2)&&!in4;if(!in4&&!in2&&Number(counts[String(set4)]||0)>=4&&c2(set2)>=2){fixActions.push("<b>Slot "+d.slot+" ("+esc(m.suitName||"Drive Disc")+ "):</b> không thuộc 2 set đang được ưu tiên; chỉ đổi khi đĩa mới cải thiện set bonus hoặc substat tổng thể.");}});
+ if(set4Count<4){const candidates=discs.filter(d=>String(discMeta(d).suitId||0)!==String(set4));fixActions.push("<b>Set 4 món:</b> "+set4Count+"/4 "+esc(setName(set4))+". Cần thêm "+(4-set4Count)+" món; slot ngoài set hiện tại: "+(candidates.map(d=>"S"+d.slot).join(", ")||"chưa xác định")+". Ưu tiên đổi slot có main sai hoặc substat yếu.");}
+ if(set2Count<2)fixActions.push("<b>Set 2 món:</b> "+set2Count+"/2 "+esc(setName(set2))+". Còn thiếu "+(2-set2Count)+" món sau khi chốt set 4.");
+ wrong.forEach(x=>fixActions.push("<b>Slot "+x.slot+" main stat:</b> hiện tại "+esc(mainLabel(x.p))+". Chọn "+allowedMain(x.slot).map(familyLabel).map(esc).join(" / ")+"."));
+ const replaceCandidates=discs.map(d=>({d,a:actionFor(d)})).filter(x=>x.a.label==="ỨNG VIÊN THAY"||x.a.label==="THAY MAIN").sort((a,b)=>(a.a.label==="THAY MAIN"?0:1)-(b.a.label==="THAY MAIN"?0:1));
+ if(replaceCandidates.length)fixActions.push("<b>Thứ tự kiểm tra thay:</b> "+replaceCandidates.map(x=>"S"+x.d.slot+" ("+x.a.label+")").join(" → ")+". Chỉ thay khi món mới không làm hỏng set bonus hoặc main stat.");
  const targets=(guide.targets||[]).map(t=>"<span class='coach-target'>"+esc(t[0])+": <b>"+esc(t[1])+"</b></span>").join("");
  const weapon=entry.Weapon||{},wid=Number(weapon.Id||0),sig=Number(guide.signatureWeaponId||0),wm=gameData?.weapons?.[String(wid)]||{},sm=gameData?.weapons?.[String(sig)]||{};
- const warnings=[];if(Number(counts[String(set4)]||0)<4)warnings.push("Set 4 món: "+(counts[String(set4)]||0)+"/4 "+name(set4));if(c2(set2)<2)warnings.push("Set phụ: "+c2(set2)+"/2 "+name(set2));
- const wrong=main.filter(x=>!x.ok);if(wrong.length)warnings.push("Main stat cần xem lại ở slot "+wrong.map(x=>x.slot).join(", "));
- root.innerHTML="<div class='buildcoach'><div class='section-head'><h3>BUILD COACH // "+esc(guide.name)+"</h3><span class='pill'>Guide "+esc(guide.patch)+"</span></div><div class='hint'>Tự đối chiếu build Enka với guide có nguồn; không cần nhập Goal.</div>"+renderCalculatedStats(entry,guide)+"<div class='coach-summary'><div class='coach-chip'><small>DRIVE DISC SET</small><b>"+esc((counts[String(set4)]||0)+"/4 "+name(set4)+" · "+c2(set2)+"/2 "+name(set2))+"</b></div><div class='coach-chip'><small>MAIN STAT 4/5/6</small><b>"+main.filter(x=>x.ok).length+"/3 đúng</b></div><div class='coach-chip'><small>W-ENGINE</small><b>"+esc(wm.name||"Chưa rõ")+"</b><div class='hint'>"+esc(wid===sig?"Đúng signature":"Guide: "+(sm.name||guide.alternatives?.[0]||"chưa rõ"))+"</div></div></div>"+(warnings.length?"<div class='coach-alert'>"+warnings.map(esc).join("<br>")+"</div>":"<div class='coach-alert'>Set và main stat đang khớp guide đã lưu.</div>")+"<div class='section-head'><h3>CẦN SỬA GÌ // ACTION LIST</h3></div>"+(fixActions.length?fixActions.map(x=>"<div class='coach-priority'>"+x+"</div>").join(""):"<div class='coach-alert'>Chưa thấy lỗi set/main stat rõ ràng. Không cần thay đĩa chỉ vì thiếu một vài substat ưu tiên; so chất lượng thực tế trước.</div>")+"<div class='section-head'><h3>ĐÁNH GIÁ 6 ĐĨA</h3></div>"+lines+"<div class='section-head'><h3>ENDGAME BENCHMARK</h3></div><div class='coach-targets'>"+(targets||"Chưa có mốc số cụ thể")+"</div><div class='hint'>"+esc(guide.sourceNote||"")+"</div><div class='coach-source'>"+(guide.sources||[]).map((u,i)=>"<a href='"+esc(u)+"' target='_blank' rel='noopener'>Nguồn "+(i+1)+"</a>").join("")+"</div><div class='hint'>Đây là tổng stat ước tính từ dữ liệu Enka, chưa phải bản sao 100% màn hình nhân vật trong game. Chưa cộng hiệu ứng set 2 món/4 món, passive W-Engine có điều kiện, buff đội hình hoặc trạng thái chiến đấu.</div></div>";
+ const warnings=[];if(set4Count<4)warnings.push("Set 4 món: "+set4Count+"/4 "+setName(set4));if(set2Count<2)warnings.push("Set phụ: "+set2Count+"/2 "+setName(set2));if(wrong.length)warnings.push("Main stat cần xem lại ở slot "+wrong.map(x=>x.slot).join(", "));
+ root.innerHTML="<div class='buildcoach'><div class='section-head'><h3>BUILD COACH // "+esc(guide.name)+"</h3><span class='pill'>Guide "+esc(guide.patch)+"</span></div><div class='hint'>Đối chiếu từng đĩa với guide. Dòng được đánh dấu ƯU TIÊN là substat nằm trong thứ tự ưu tiên của nhân vật.</div>"+renderCalculatedStats(entry,guide)+"<div class='coach-summary'><div class='coach-chip'><small>DRIVE DISC SET</small><b>"+esc(set4Count+"/4 "+setName(set4)+" · "+set2Count+"/2 "+setName(set2))+"</b></div><div class='coach-chip'><small>MAIN STAT 4/5/6</small><b>"+main.filter(x=>x.ok).length+"/3 đúng</b></div><div class='coach-chip'><small>W-ENGINE</small><b>"+esc(wm.name||"Chưa rõ")+"</b><div class='hint'>"+esc(wid===sig?"Đúng signature":"Guide: "+(sm.name||guide.alternatives?.[0]||"chưa rõ"))+"</div></div></div>"+(warnings.length?"<div class='coach-alert'>"+warnings.map(esc).join("<br>")+"</div>":"<div class='coach-alert'>Set và main stat đang khớp guide đã lưu.</div>")+"<div class='section-head'><h3>CẦN SỬA GÌ // ACTION LIST</h3></div>"+(fixActions.length?fixActions.map(x=>"<div class='coach-priority'>"+x+"</div>").join(""):"<div class='coach-alert'>Chưa thấy lỗi set/main stat rõ ràng. Đánh giá substat bên dưới để quyết định nâng cấp tiếp.</div>")+"<div class='section-head'><h3>ĐÁNH GIÁ TỪNG DRIVE DISC</h3></div><div class='hint'>Đây là đánh giá ưu tiên substat theo guide, không phải điểm roll tuyệt đối. Chưa thể kết luận giá trị từng roll nếu chưa xác minh bảng roll theo rarity.</div>"+lines+"<div class='section-head'><h3>ENDGAME BENCHMARK</h3></div><div class='coach-targets'>"+(targets||"Chưa có mốc số cụ thể")+"</div><div class='hint'>"+esc(guide.sourceNote||"")+"</div><div class='coach-source'>"+(guide.sources||[]).map((u,i)=>"<a href='"+esc(u)+"' target='_blank' rel='noopener'>Nguồn "+(i+1)+"</a>").join("")+"</div><div class='hint'>Tổng stat là ước tính từ Enka; chưa cộng hiệu ứng set, passive W-Engine có điều kiện, buff đội hình hoặc combat state.</div></div>";
 }
 function renderResourcePlan(){
  const a=data[selected]||{},battery=Math.max(0,Number(a.dailyBattery)||0),minutes=Math.max(0,Number(a.dailyMinutes)||0),days=Math.max(1,Math.min(14,Number(a.planDays)||7));
